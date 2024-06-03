@@ -3,6 +3,7 @@ import { Projects } from '../src/Projects';
 import { CHAINS, NODE_URL } from '../src/Constants';
 import { TOKENS } from './constants';
 
+import 'blndgs-model';
 import { Intent } from '../src/index';
 import { ethers } from 'ethers';
 
@@ -46,6 +47,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('ETH -> ERC20 Swap', async () => {
+    //Lanre
     const intents = {
       sender: sender,
       from: {
