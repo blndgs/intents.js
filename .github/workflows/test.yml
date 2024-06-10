@@ -1,0 +1,24 @@
+name: Test
+on:
+  workflow_call:
+  schedule:
+    # 21 PM UTC
+    - cron:  '0 21 * * *'
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: node:20
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: blndgs/intents.js
+          ref: main
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - name: Run code
+        run: npx jest
