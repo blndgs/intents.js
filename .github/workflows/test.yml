@@ -5,7 +5,7 @@ on:
     # 21 PM UTC
     - cron:  '0 21 * * *'
   push:
-    branches: [creating-workflow]
+    branches: [main]
 
 jobs:
   test:
