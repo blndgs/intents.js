@@ -1,8 +1,7 @@
 import { IntentBuilder } from '../src';
 import { Projects } from '../src';
-import { CHAINS, NODE_URL } from '../src/Constants';
+import { NODE_URL } from '../src/Constants';
 
-import { Intent } from 'blndgs-model/dist/asset_pb';
 import { ethers } from 'ethers';
 import { TOKENS } from './constants';
 
@@ -40,8 +39,15 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('ETH -> DAI Swap', async () => {
-
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Ethereum, '0.1', 'currency', TOKENS.Dai, '0.1',)
+    const intents = intentBuilder.createIntent(
+      sender,
+      'currency',
+      TOKENS.Ethereum,
+      '0.1',
+      'currency',
+      TOKENS.Dai,
+      '0.1',
+    );
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
@@ -66,7 +72,6 @@ describe('execute function use cases tests', () => {
       '0.2',
     );
 
-
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
 
@@ -80,16 +85,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('DAI -> ETH Swap', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Dai,
-      '10',
-      'currency',
-      TOKENS.Ethereum,
-      '10'
-    );
-
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '10', 'currency', TOKENS.Ethereum, '10');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -111,7 +107,7 @@ describe('execute function use cases tests', () => {
       '0.1',
       'currency',
       TOKENS.Ethereum,
-      '0.1'
+      '0.1',
     );
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -126,15 +122,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('DAI -> USDC Swap', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Dai,
-      '10',
-      'currency',
-      TOKENS.Usdc,
-      '10'
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '10', 'currency', TOKENS.Usdc, '10');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
 
@@ -146,15 +134,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('DAI -> ETH Stake', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Dai,
-      '100',
-      'staking',
-      Projects.Lido,
-      '100'
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '100', 'staking', Projects.Lido, '100');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
     const initialStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
@@ -169,15 +149,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('WETH -> ETH Stake', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Weth,
-      '0.1',
-      'staking',
-      Projects.Lido,
-      '0.1'
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Weth, '0.1', 'staking', Projects.Lido, '0.1');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
     const initialStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
@@ -199,7 +171,7 @@ describe('execute function use cases tests', () => {
       '0.1',
       'staking',
       Projects.Lido,
-      '0.1'
+      '0.1',
     );
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -222,7 +194,7 @@ describe('execute function use cases tests', () => {
       '0.1',
       'loan',
       Projects.Aave,
-      '0.1'
+      '0.1',
     );
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -235,15 +207,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('ERC20 -> ERC20 Loan', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Dai,
-      '0.1',
-      'loan',
-      Projects.Aave,
-      '0.1'
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '0.1', 'loan', Projects.Aave, '0.1');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
     const initialADaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
@@ -265,7 +229,7 @@ describe('execute function use cases tests', () => {
       '0.1',
       'loan',
       Projects.Aave,
-      '0.1'
+      '0.1',
     );
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -280,7 +244,6 @@ describe('execute function use cases tests', () => {
     expect(parseFloat(finalDaiBalance)).toBeGreaterThan(parseFloat(initialDaiBalance));
   }, 100000);
 
-
   it('ETH -> Dai Loan', async () => {
     const intents = intentBuilder.createIntent(
       sender,
@@ -289,9 +252,8 @@ describe('execute function use cases tests', () => {
       '0.1',
       'loan',
       Projects.Aave,
-      '0.1'
+      '0.1',
     );
-
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
@@ -306,16 +268,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Loaned Dai -> ETH', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'loan',
-      TOKENS.ADai,
-      '10',
-      'currency',
-      TOKENS.Ethereum,
-      '10'
-    );
-
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '10', 'currency', TOKENS.Ethereum, '10');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -330,16 +283,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Loaned Weth -> ETH', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'loan',
-      TOKENS.Aweth,
-      '10',
-      'currency',
-      TOKENS.Ethereum,
-      '10'
-    );
-
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.Aweth, '10', 'currency', TOKENS.Ethereum, '10');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Aweth);
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
@@ -354,15 +298,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Loaned Dai -> Usdc', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'loan',
-      TOKENS.ADai,
-      '5',
-      'currency',
-      TOKENS.Usdc,
-      '5'
-    );
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '5', 'currency', TOKENS.Usdc, '5');
 
     const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
     const initialUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
@@ -377,15 +313,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Failed Loaned ETH -> ERC20', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'loan',
-      TOKENS.Ethereum,
-      '1',
-      'currency',
-      TOKENS.Usdc,
-      '1'
-    );
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.Ethereum, '1', 'currency', TOKENS.Usdc, '1');
 
     const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Ethereum);
     const initialUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
@@ -411,7 +339,7 @@ describe('execute function use cases tests', () => {
       '5',
       'currency',
       TOKENS.Usdc,
-      '5'
+      '5',
     );
 
     const initialNonAaveTokenBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
@@ -431,15 +359,7 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Failed Loan -> Stake', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'loan',
-      TOKENS.ADai,
-      '5',
-      'staking',
-      Projects.Lido,
-      '5'
-    );
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '5', 'staking', Projects.Lido, '5');
 
     try {
       await intentBuilder.execute(intents, signer, NODE_URL);
@@ -447,4 +367,4 @@ describe('execute function use cases tests', () => {
       expect(error).toBeDefined();
     }
   }, 100000);
-})
+});

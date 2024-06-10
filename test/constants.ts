@@ -9,5 +9,4 @@ export const TOKENS = {
   Aweth: '0x4d5f47fa6a74757f35c14fd3a6ef8e3c9bc514e8',
   Wbtc: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
   Awbtc: '0x5ee5bf7ae06d1be5997a1a72006fe6c607ec6de8',
-
 };

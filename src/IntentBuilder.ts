@@ -1,75 +1,78 @@
 import { BytesLike, ethers } from 'ethers';
 import { BUNDLER_URL, CHAIN_ID, ENTERY_POINT, FACTORY, NODE_URL, CHAINS } from './Constants';
 import { Client, Presets, UserOperationBuilder } from 'userop';
-import {
-  Intent,
-  Asset,
-  Stake,
-  Loan
-} from 'blndgs-model/dist/asset_pb';
+import { Intent, Asset, Stake, Loan } from 'blndgs-model/dist/asset_pb';
 
 import { Projects } from './Projects';
 
-
 export class IntentBuilder {
-
   capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  
-  public createIntent(sender: string, fromMode: string, fromSelectedToken: string, inputValue: string, toMode: string, toSelectedToken: string, toAmount: string, fromSelectedProject= "", toSelectedProject = ""): Intent {
-    let fromCaseValue: { case: 'fromAsset' | 'fromLoan', value: Asset | Loan } | undefined;
-    let toCaseValue: { case: 'toAsset' | 'toLoan' | 'toStake', value: Asset | Loan | Stake } | undefined;
+
+  public createIntent(
+    sender: string,
+    fromMode: string,
+    fromSelectedToken: string,
+    inputValue: string,
+    toMode: string,
+    toSelectedToken: string,
+    toAmount: string,
+    fromSelectedProject = '',
+    toSelectedProject = '',
+  ): Intent {
+    let fromCaseValue: { case: 'fromAsset' | 'fromLoan'; value: Asset | Loan } | undefined;
+    let toCaseValue: { case: 'toAsset' | 'toLoan' | 'toStake'; value: Asset | Loan | Stake } | undefined;
 
     // Determine the "from" asset or loan
     if (fromMode === 'currency') {
       fromCaseValue = {
-        case: "fromAsset",
+        case: 'fromAsset',
         value: new Asset({
           address: fromSelectedToken,
           amount: this.createBigInt(inputValue),
-          chainId: this.createBigInt(CHAINS.Ethereum)
-        })
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
       };
     } else if (fromMode === 'loan') {
       const projectAddress = fromSelectedProject ? Projects[this.capitalize(fromSelectedProject)] : undefined;
       fromCaseValue = {
-        case: "fromLoan",
+        case: 'fromLoan',
         value: new Loan({
-          asset: fromSelectedToken,  
+          asset: fromSelectedToken,
           amount: this.createBigInt(inputValue),
-          address: projectAddress,  
-          chainId: this.createBigInt(CHAINS.Ethereum)
-        })
+          address: projectAddress,
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
       };
     }
 
     // Determine the "to" asset, loan, or stake
     if (toMode === 'currency') {
       toCaseValue = {
-        case: "toAsset",
+        case: 'toAsset',
         value: new Asset({
           address: toSelectedToken,
           amount: this.createBigInt(toAmount),
-          chainId: this.createBigInt(CHAINS.Ethereum)
-        })
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
       };
     } else if (toMode === 'loan') {
       const projectAddress = toSelectedProject ? Projects[this.capitalize(toSelectedProject)] : undefined;
       toCaseValue = {
-        case: "toLoan",
+        case: 'toLoan',
         value: new Loan({
           asset: toSelectedToken,
           amount: this.createBigInt(toAmount),
           address: projectAddress,
-          chainId: this.createBigInt(CHAINS.Ethereum)
-        })
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
       };
     } else if (toMode === 'staking') {
       toCaseValue = {
-        case: "toStake",
+        case: 'toStake',
         value: new Stake({
-          address: Projects.Lido,  
-          chainId: this.createBigInt(CHAINS.Ethereum)
-        })
+          address: Projects.Lido,
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
       };
     }
 
@@ -80,9 +83,8 @@ export class IntentBuilder {
     });
   }
 
-
   public createBigInt(value: string) {
-    let buffer = new Uint8Array(value.length);
+    const buffer = new Uint8Array(value.length);
     for (let i = 0; i < value.length; i++) {
       buffer[i] = parseInt(value.charAt(i), 10);
     }
@@ -100,7 +102,6 @@ export class IntentBuilder {
 
     return sender;
   }
-
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async fetchWithNodeFetch(url: string, options: any) {
