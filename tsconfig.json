@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
+    "moduleResolution": "node",
     "outDir": "./dist",
-    // Output directory for compiled files
+    "rootDir": "./src",
     "module": "CommonJS",
     // Module system
-    "target": "ES6",
+    "target": "ES5",
     // Compilation target
     "declaration": true,
-    // Generate type declaration (.d.ts) files
-    "esModuleInterop": true,
-    "strict": true
+    "declarationDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true
   },
   "include": [
     "./src/**/*"
