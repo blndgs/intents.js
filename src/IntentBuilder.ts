@@ -1,28 +1,114 @@
-import { ethers, BytesLike } from 'ethers'
-import { Intent } from './InterfaceIntent'
-import { BUNDLER_URL, factoryAddr, entryPointAddr, chainID } from './Constants'
-import { Presets, Client, UserOperationBuilder } from 'userop'
+import { BytesLike, ethers } from 'ethers';
+import { BUNDLER_URL, CHAIN_ID, ENTERY_POINT, FACTORY, NODE_URL, CHAINS } from './Constants';
+import { Client, Presets, UserOperationBuilder } from 'userop';
+import { Intent, Asset, Stake, Loan } from 'blndgs-model/dist/asset_pb';
 
-
+import { Projects } from './Projects';
 
 export class IntentBuilder {
+  capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  public createIntent(
+    sender: string,
+    fromMode: string,
+    fromSelectedToken: string,
+    inputValue: string,
+    toMode: string,
+    toSelectedToken: string,
+    toAmount: string,
+    fromSelectedProject = '',
+    toSelectedProject = '',
+  ): Intent {
+    let fromCaseValue: { case: 'fromAsset' | 'fromLoan'; value: Asset | Loan } | undefined;
+    let toCaseValue: { case: 'toAsset' | 'toLoan' | 'toStake'; value: Asset | Loan | Stake } | undefined;
+
+    // Determine the "from" asset or loan
+    if (fromMode === 'currency') {
+      fromCaseValue = {
+        case: 'fromAsset',
+        value: new Asset({
+          address: fromSelectedToken,
+          amount: this.createBigInt(inputValue),
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
+      };
+    } else if (fromMode === 'loan') {
+      const projectAddress = fromSelectedProject ? Projects[this.capitalize(fromSelectedProject)] : undefined;
+      fromCaseValue = {
+        case: 'fromLoan',
+        value: new Loan({
+          asset: fromSelectedToken,
+          amount: this.createBigInt(inputValue),
+          address: projectAddress,
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
+      };
+    }
+
+    // Determine the "to" asset, loan, or stake
+    if (toMode === 'currency') {
+      toCaseValue = {
+        case: 'toAsset',
+        value: new Asset({
+          address: toSelectedToken,
+          amount: this.createBigInt(toAmount),
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
+      };
+    } else if (toMode === 'loan') {
+      const projectAddress = toSelectedProject ? Projects[this.capitalize(toSelectedProject)] : undefined;
+      toCaseValue = {
+        case: 'toLoan',
+        value: new Loan({
+          asset: toSelectedToken,
+          amount: this.createBigInt(toAmount),
+          address: projectAddress,
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
+      };
+    } else if (toMode === 'staking') {
+      toCaseValue = {
+        case: 'toStake',
+        value: new Stake({
+          address: Projects.Lido,
+          chainId: this.createBigInt(CHAINS.Ethereum),
+        }),
+      };
+    }
+
+    return new Intent({
+      sender: sender,
+      from: fromCaseValue,
+      to: toCaseValue,
+    });
+  }
+
+  public createBigInt(value: string) {
+    const buffer = new Uint8Array(value.length);
+    for (let i = 0; i < value.length; i++) {
+      buffer[i] = parseInt(value.charAt(i), 10);
+    }
+    return {
+      value: buffer,
+    };
+  }
 
   public async getSender(signer: ethers.Signer, salt: BytesLike = '0'): Promise<string> {
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, BUNDLER_URL, {
-      factory: factoryAddr,
+      factory: FACTORY,
       salt: salt,
-    })
-    const sender = simpleAccount.getSender()
+    });
+    const sender = simpleAccount.getSender();
 
-    return sender
+    return sender;
   }
-
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async fetchWithNodeFetch(url: string, options: any) {
     const isNode = typeof window === 'undefined';
     if (isNode) {
-      const fetch = (await import('node-fetch')).default;
+      const fetchModule = await import('node-fetch');
+      const fetch = fetchModule.default;
       return fetch(url, options);
     } else {
       return window.fetch(url, options);
@@ -30,13 +116,14 @@ export class IntentBuilder {
   }
 
   async execute(intents: Intent, signer: ethers.Signer, nodeUrl: string): Promise<void> {
-    let ownerAddress = await signer.getAddress()
-    ownerAddress = ownerAddress.substring(2, ownerAddress.length) //remove 0x value
+    let ownerAddress = await signer.getAddress();
+    console.log('ownerAddress ' + ownerAddress);
+    ownerAddress = ownerAddress.substring(2, ownerAddress.length); //remove 0x value
     const sender = intents.sender;
 
-    const intent = ethers.utils.toUtf8Bytes(JSON.stringify(intents))
-    const nonce = await this.getNonce(sender, nodeUrl)
-    const initCode = await this.getInitCode(nonce, ownerAddress)
+    const intent = ethers.utils.toUtf8Bytes(JSON.stringify(intents));
+    const nonce = await this.getNonce(sender, nodeUrl);
+    const initCode = await this.getInitCode(nonce, ownerAddress);
 
     const builder = new UserOperationBuilder()
       .useDefaults({ sender })
@@ -47,49 +134,47 @@ export class IntentBuilder {
       .setVerificationGasLimit('0x493E0')
       .setCallGasLimit('0xC3500')
       .setNonce(nonce)
-      .setInitCode(initCode)
+      .setInitCode(initCode);
 
-    const signature = await this.getSignature(signer, builder)
-    builder.setSignature(signature)
+    const signature = await this.getSignature(signer, builder);
+    builder.setSignature(signature);
 
-    const client = await Client.init(BUNDLER_URL)
+    const client = await Client.init(BUNDLER_URL);
 
     const res = await client.sendUserOperation(builder, {
       onBuild: op => console.log('Signed UserOperation:', op),
-    })
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const solvedHash = (res as any).userOpHash.solved_hash
+    const solvedHash = (res as any).userOpHash.solved_hash;
 
     const headers = {
-      'accept': 'application/json',
-      'content-type': 'application/json'
+      accept: 'application/json',
+      'content-type': 'application/json',
     };
 
     const body = JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
       method: 'eth_getUserOperationReceipt',
-      params: [
-        solvedHash
-      ]
+      params: [solvedHash],
     });
 
     const resReceipt = await this.fetchWithNodeFetch(BUNDLER_URL, {
       method: 'POST',
       headers: headers,
-      body: body
-    })
+      body: body,
+    });
 
-    const reciept = await resReceipt.json()
-    console.log(reciept)
+    const reciept = await resReceipt.json();
+    console.log(reciept);
   }
 
-
   private async getInitCode(nonce: string, ownerAddress: string) {
-    return nonce !== '0x0'
+    console.log('nonce ' + nonce);
+    return nonce !== '0'
       ? '0x'
-      : `${factoryAddr}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`
+      : `${FACTORY}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,21 +192,20 @@ export class IntentBuilder {
         builder.getMaxFeePerGas(),
         builder.getMaxPriorityFeePerGas(),
         ethers.utils.keccak256(builder.getPaymasterAndData()),
-      ]
-    )
+      ],
+    );
 
     const enc = ethers.utils.defaultAbiCoder.encode(
       ['bytes32', 'address', 'uint256'],
-      [ethers.utils.keccak256(packedData), entryPointAddr, chainID]
-    )
+      [ethers.utils.keccak256(packedData), ENTERY_POINT, CHAIN_ID],
+    );
 
-    const userOpHash = ethers.utils.keccak256(enc)
-    const signature = await signer.signMessage(ethers.utils.arrayify(userOpHash))
-    return signature
+    const userOpHash = ethers.utils.keccak256(enc);
+    return await signer.signMessage(ethers.utils.arrayify(userOpHash));
   }
 
   private async getNonce(sender: string, nodeUrl: string) {
-    const provider = new ethers.providers.JsonRpcProvider(nodeUrl)
+    const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
     const abi = [
       {
         inputs: [
@@ -147,26 +231,29 @@ export class IntentBuilder {
         stateMutability: 'view',
         type: 'function',
       },
-    ]
+    ];
 
     // Create a contract instance
-    const contract = new ethers.Contract(entryPointAddr, abi, provider)
+    const contract = new ethers.Contract(ENTERY_POINT, abi, provider);
 
     try {
-      const nonce = await contract.getNonce(sender, '0')
-      console.log('Nonce:', nonce.toString())
-      return nonce.toString()
+      const nonce = await contract.getNonce(sender, '0');
+      console.log('Nonce:', nonce.toString());
+      return nonce.toString();
     } catch (error) {
-      console.error('Error getting nonce:', error)
+      console.error('Error getting nonce:', error);
     }
   }
 
-  public async faucet(address: string, amount: string, nodeUrl: string): Promise<void> {
-    const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
+  public async faucet(addrss: string) {
+    // Import ethers
+
+    // Connect to your Ethereum node or gateway
+    const provider = new ethers.providers.JsonRpcProvider(NODE_URL);
 
     // Define the JSON-RPC request for the tenderly_addBalance method
     const method = 'tenderly_addBalance';
-    const params = [[address], amount];
+    const params = [[addrss], '0x6f05b59d3b20000'];
     const jsonRpcRequest = {
       jsonrpc: '2.0',
       method: method,
@@ -177,12 +264,13 @@ export class IntentBuilder {
     try {
       const response = await provider.send(jsonRpcRequest.method, jsonRpcRequest.params);
       console.log('Response:', response);
+      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
     }
   }
-  
-  public async checkBalance(address: string, nodeUrl: string, tokenAddress?: string): Promise<void> {
+
+  public async checkBalance(address: string, nodeUrl: string, tokenAddress?: string): Promise<string> {
     const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
 
     try {
@@ -200,15 +288,19 @@ export class IntentBuilder {
 
         const contract = new ethers.Contract(tokenAddress, abi, provider);
         const balance = await contract.balanceOf(address);
-        console.log(`ERC20 Balance: ${ethers.utils.formatUnits(balance, 18)}`);
+        const formattedBalance = ethers.utils.formatUnits(balance, 18);
+        console.log(`ERC20 Balance: ${formattedBalance}`);
+        return formattedBalance;
       } else {
         // ETH balance check
         const balance = await provider.getBalance(address);
-        console.log(`ETH Balance: ${ethers.utils.formatEther(balance)}`);
+        const formattedBalance = ethers.utils.formatEther(balance);
+        console.log(`ETH Balance: ${formattedBalance}`);
+        return formattedBalance;
       }
     } catch (error) {
       console.error('Error checking balance:', error);
+      return '0';
     }
   }
-
 }

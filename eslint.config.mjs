@@ -17,4 +17,5 @@ export default [
       'prettier/prettier': 'error',
     },
   },
+  { ignores: ['node_modules/', 'dist/'] },
 ];
