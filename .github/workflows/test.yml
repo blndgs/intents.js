@@ -5,11 +5,11 @@ on:
     # 21 PM UTC
     - cron:  '0 21 * * *'
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   test:
-    runs-on: node:20
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
