@@ -21,4 +21,4 @@ jobs:
         with:
           node-version: '20.x'
       - name: Run code
-        run: npx jest
+        run: npx jest --verbose
