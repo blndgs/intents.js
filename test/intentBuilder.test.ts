@@ -1,6 +1,4 @@
-import { IntentBuilder } from '../src';
-import { Projects } from '../src';
-import { NODE_URL } from '../src/Constants';
+import { IntentBuilder, Projects, Helpers } from '../src';
 
 import { ethers } from 'ethers';
 import { TOKENS } from './constants';
@@ -25,304 +23,238 @@ describe('execute function use cases tests', () => {
   });
 
   it('should have an initial ETH balance of 0', async () => {
-    const balance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const balance = await Helpers.checkBalance(sender);
     expect(parseFloat(balance)).toBe(0);
   }, 100000);
 
   it('should faucet the account with 1 ETH and check the balance', async () => {
     // Faucet the account with 1 ETH
-    await intentBuilder.faucet(sender);
+    await Helpers.faucet(sender);
 
     // Check the balance after faucet
-    const balanceAfter = await intentBuilder.checkBalance(sender, NODE_URL);
+    const balanceAfter = await Helpers.checkBalance(sender);
     expect(parseFloat(balanceAfter)).toBe(0.5);
   }, 100000);
 
   it('ETH -> DAI Swap', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-      'currency',
-      TOKENS.Dai,
-      '0.1',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.1, 'currency', TOKENS.Dai, 0.1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
 
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
     expect(parseFloat(finalDaiBalance)).toBeGreaterThan(parseFloat(initialDaiBalance));
   }, 100000);
 
   it('ETH -> WETH Swap', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.2',
-      'currency',
-      TOKENS.Weth,
-      '0.2',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.2, 'currency', TOKENS.Weth, 0.2);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
 
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
     expect(parseFloat(finalDaiBalance)).toBeGreaterThan(parseFloat(initialDaiBalance));
   }, 100000);
 
   it('DAI -> ETH Swap', async () => {
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '10', 'currency', TOKENS.Ethereum, '10');
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, 10, 'currency', TOKENS.ETH, 10);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    await intentBuilder.execute(intents, signer);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
-
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalEthBalance)).toBeGreaterThan(parseFloat(initialEthBalance));
   }, 100000);
 
   it('WETH -> ETH Swap', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Weth,
-      '0.1',
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-    );
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Weth, 0.1, 'currency', TOKENS.ETH, 0.1);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    await intentBuilder.execute(intents, signer);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
-
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalEthBalance)).toBeGreaterThan(parseFloat(initialEthBalance));
   }, 100000);
 
   it('DAI -> USDC Swap', async () => {
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '10', 'currency', TOKENS.Usdc, '10');
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, 10, 'currency', TOKENS.Usdc, 10);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
 
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
   }, 100000);
 
   it('DAI -> ETH Stake', async () => {
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '100', 'staking', Projects.Lido, '100');
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, 100, 'staking', Projects.Lido, 100);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const initialStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const initialStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const finalStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const finalStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalStEthBalance)).toBeGreaterThan(parseFloat(initialStEthBalance));
   }, 100000);
 
   it('WETH -> ETH Stake', async () => {
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Weth, '0.1', 'staking', Projects.Lido, '0.1');
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Weth, 0.1, 'staking', Projects.Lido, 0.1);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
-    const initialStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
+    const initialStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Weth);
-    const finalStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Weth);
+    const finalStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalStEthBalance)).toBeGreaterThan(parseFloat(initialStEthBalance));
   }, 100000);
 
   it('ETH -> ETH Stake', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-      'staking',
-      Projects.Lido,
-      '0.1',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.1, 'staking', Projects.Lido, 0.1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const initialStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const finalStEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Steth);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const finalStEthBalance = await Helpers.checkBalance(sender, TOKENS.Steth);
 
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
     expect(parseFloat(finalStEthBalance)).toBeGreaterThan(parseFloat(initialStEthBalance));
   }, 100000);
 
   it('ETH -> ETH Loan', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-      'loan',
-      Projects.Aave,
-      '0.1',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.1, 'loan', Projects.Aave, 0.1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    await intentBuilder.execute(intents, signer);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
-
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
   }, 100000);
 
   it('ERC20 -> ERC20 Loan', async () => {
-    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, '0.1', 'loan', Projects.Aave, '0.1');
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.Dai, 0.1, 'loan', Projects.Aave, 0.1);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const initialADaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const initialADaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Dai);
-    const finalADaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Dai);
+    const finalADaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
 
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalADaiBalance)).toBeGreaterThan(parseFloat(initialADaiBalance));
   }, 100000);
 
   it('ETH -> Weth Loan', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-      'loan',
-      Projects.Aave,
-      '0.1',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.1, 'loan', Projects.Aave, 0.1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Aweth);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Aweth);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Aweth);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Aweth);
 
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
     expect(parseFloat(finalDaiBalance)).toBeGreaterThan(parseFloat(initialDaiBalance));
   }, 100000);
 
   it('ETH -> Dai Loan', async () => {
-    const intents = intentBuilder.createIntent(
-      sender,
-      'currency',
-      TOKENS.Ethereum,
-      '0.1',
-      'loan',
-      Projects.Aave,
-      '0.1',
-    );
+    const intents = intentBuilder.createIntent(sender, 'currency', TOKENS.ETH, 0.1, 'loan', Projects.Aave, 0.1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
 
     expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
     expect(parseFloat(finalDaiBalance)).toBeGreaterThan(parseFloat(initialDaiBalance));
   }, 100000);
 
   it('Loaned Dai -> ETH', async () => {
-    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '10', 'currency', TOKENS.Ethereum, '10');
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, 10, 'currency', TOKENS.ETH, 10);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    await intentBuilder.execute(intents, signer);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
-
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalEthBalance)).toBeGreaterThan(parseFloat(initialEthBalance));
   }, 100000);
 
   it('Loaned Weth -> ETH', async () => {
-    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.Aweth, '10', 'currency', TOKENS.Ethereum, '10');
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.Aweth, 10, 'currency', TOKENS.ETH, 10);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Aweth);
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.Aweth);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    await intentBuilder.execute(intents, signer);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
-
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Aweth);
-    const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL);
-
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.Aweth);
+    const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalEthBalance)).toBeGreaterThan(parseFloat(initialEthBalance));
   }, 100000);
 
   it('Loaned Dai -> Usdc', async () => {
-    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '5', 'currency', TOKENS.Usdc, '5');
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, 5, 'currency', TOKENS.Usdc, 5);
 
-    const initialDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
-    const initialUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+    const initialDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
+    const initialUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
-    await intentBuilder.execute(intents, signer, NODE_URL);
+    await intentBuilder.execute(intents, signer);
 
-    const finalDaiBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.ADai);
-    const finalUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+    const finalDaiBalance = await Helpers.checkBalance(sender, TOKENS.ADai);
+    const finalUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
     expect(parseFloat(finalDaiBalance)).toBeLessThan(parseFloat(initialDaiBalance));
     expect(parseFloat(finalUsdcBalance)).toBeGreaterThan(parseFloat(initialUsdcBalance));
   }, 100000);
 
   it('Failed Loaned ETH -> ERC20', async () => {
-    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.Ethereum, '1', 'currency', TOKENS.Usdc, '1');
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ETH, 1, 'currency', TOKENS.Usdc, 1);
 
-    const initialEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Ethereum);
-    const initialUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+    const initialEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+    const initialUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
     try {
-      await intentBuilder.execute(intents, signer, NODE_URL);
+      await intentBuilder.execute(intents, signer);
 
-      const finalEthBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Ethereum);
-      const finalUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+      const finalEthBalance = await Helpers.checkBalance(sender, TOKENS.ETH);
+      const finalUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
       expect(parseFloat(finalEthBalance)).toBeLessThan(parseFloat(initialEthBalance));
       expect(parseFloat(finalUsdcBalance)).toBeGreaterThan(parseFloat(initialUsdcBalance));
@@ -336,20 +268,20 @@ describe('execute function use cases tests', () => {
       sender,
       'loan',
       TOKENS.Usdc, // Token not available on Aave
-      '5',
+      5,
       'currency',
       TOKENS.Usdc,
-      '5',
+      5,
     );
 
-    const initialNonAaveTokenBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
-    const initialUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+    const initialNonAaveTokenBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
+    const initialUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
     try {
-      await intentBuilder.execute(intents, signer, NODE_URL);
+      await intentBuilder.execute(intents, signer);
 
-      const finalNonAaveTokenBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
-      const finalUsdcBalance = await intentBuilder.checkBalance(sender, NODE_URL, TOKENS.Usdc);
+      const finalNonAaveTokenBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
+      const finalUsdcBalance = await Helpers.checkBalance(sender, TOKENS.Usdc);
 
       expect(parseFloat(finalNonAaveTokenBalance)).toBeLessThan(parseFloat(initialNonAaveTokenBalance));
       expect(parseFloat(finalUsdcBalance)).toBeGreaterThan(parseFloat(initialUsdcBalance));
@@ -359,10 +291,10 @@ describe('execute function use cases tests', () => {
   }, 100000);
 
   it('Failed Loan -> Stake', async () => {
-    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, '5', 'staking', Projects.Lido, '5');
+    const intents = intentBuilder.createIntent(sender, 'loan', TOKENS.ADai, 5, 'staking', Projects.Lido, 5);
 
     try {
-      await intentBuilder.execute(intents, signer, NODE_URL);
+      await intentBuilder.execute(intents, signer);
     } catch (error) {
       expect(error).toBeDefined();
     }

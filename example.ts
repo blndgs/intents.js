@@ -4,8 +4,6 @@ import { ethers } from 'ethers';
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const signer = provider.getSigner();
 
-const nodeUrl = '';
-
 const intentBuilder = new IntentBuilder();
 
 const sender = '0x';
@@ -31,6 +29,6 @@ const intent = intentBuilder.createIntent(
 );
 
 intentBuilder
-  .execute(intent, signer, nodeUrl)
+  .execute(intent, signer)
   .then(() => console.log('Intent executed successfully.'))
   .catch(error => console.error('Error executing intent:', error));

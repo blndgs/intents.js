@@ -30,14 +30,6 @@ Create an instance of the `IntentSDK`:
 const intentBuilder = new IntentBuilder();
 ```
 
-### 2. Configuration
-
-After initializing the SDK, you need to configure it with your signing key and node URL. Replace the placeholders with your actual signing key and node URL:
-
-```tsx
-const nodeUrl = '<Your_Node_URL_Here>';
-```
-
 ### 3. Creating an Intent
 
 To create an intent with the `intents.js` SDK, you must specify the nature of the transaction you want to execute. This involves defining the source (from) and destination (to) assets, including their types, addresses, and the amounts involved. An intent encapsulates all the details required to execute a transaction between two parties or within the blockchain environment.
@@ -71,7 +63,7 @@ After setting up your intents array, the next step is to execute these intents u
 
 ```tsx
 intentBuilder
-  .execute(intent, signer, nodeUrl)
+  .execute(intent, signer)
   .then(() => console.log('Intent executed successfully.'))
   .catch(error => console.error('Error executing intent:', error));
 ```

@@ -12,10 +12,10 @@ export class IntentBuilder {
     sender: string,
     fromMode: string,
     fromSelectedToken: string,
-    inputValue: string,
+    inputValue: number,
     toMode: string,
     toSelectedToken: string,
-    toAmount: string,
+    toAmount: number,
     fromSelectedProject = '',
     toSelectedProject = '',
   ): Intent {
@@ -83,10 +83,13 @@ export class IntentBuilder {
     });
   }
 
-  public createBigInt(value: string) {
-    const buffer = new Uint8Array(value.length);
-    for (let i = 0; i < value.length; i++) {
-      buffer[i] = parseInt(value.charAt(i), 10);
+  public createBigInt(value: number) {
+    // Convert the input to a string if it's a number
+    const inputString = value.toString();
+
+    const buffer = new Uint8Array(inputString.length);
+    for (let i = 0; i < inputString.length; i++) {
+      buffer[i] = parseInt(inputString.charAt(i), 10);
     }
     return {
       value: buffer,
@@ -115,14 +118,14 @@ export class IntentBuilder {
     }
   }
 
-  async execute(intents: Intent, signer: ethers.Signer, nodeUrl: string): Promise<void> {
+  async execute(intents: Intent, signer: ethers.Signer): Promise<void> {
     let ownerAddress = await signer.getAddress();
     console.log('ownerAddress ' + ownerAddress);
     ownerAddress = ownerAddress.substring(2, ownerAddress.length); //remove 0x value
     const sender = intents.sender;
 
     const intent = ethers.utils.toUtf8Bytes(JSON.stringify(intents));
-    const nonce = await this.getNonce(sender, nodeUrl);
+    const nonce = await this.getNonce(sender);
     const initCode = await this.getInitCode(nonce, ownerAddress);
 
     const builder = new UserOperationBuilder()
@@ -204,8 +207,8 @@ export class IntentBuilder {
     return await signer.signMessage(ethers.utils.arrayify(userOpHash));
   }
 
-  private async getNonce(sender: string, nodeUrl: string) {
-    const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
+  private async getNonce(sender: string) {
+    const provider = new ethers.providers.JsonRpcProvider(NODE_URL);
     const abi = [
       {
         inputs: [
@@ -242,65 +245,6 @@ export class IntentBuilder {
       return nonce.toString();
     } catch (error) {
       console.error('Error getting nonce:', error);
-    }
-  }
-
-  public async faucet(addrss: string) {
-    // Import ethers
-
-    // Connect to your Ethereum node or gateway
-    const provider = new ethers.providers.JsonRpcProvider(NODE_URL);
-
-    // Define the JSON-RPC request for the tenderly_addBalance method
-    const method = 'tenderly_addBalance';
-    const params = [[addrss], '0x6f05b59d3b20000'];
-    const jsonRpcRequest = {
-      jsonrpc: '2.0',
-      method: method,
-      params: params,
-      id: 1, // The ID can be any number or string
-    };
-
-    try {
-      const response = await provider.send(jsonRpcRequest.method, jsonRpcRequest.params);
-      console.log('Response:', response);
-      window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
-
-  public async checkBalance(address: string, nodeUrl: string, tokenAddress?: string): Promise<string> {
-    const provider = new ethers.providers.JsonRpcProvider(nodeUrl);
-
-    try {
-      if (tokenAddress) {
-        // ERC20 balance check
-        const abi = [
-          {
-            constant: true,
-            inputs: [{ name: '_owner', type: 'address' }],
-            name: 'balanceOf',
-            outputs: [{ name: 'balance', type: 'uint256' }],
-            type: 'function',
-          },
-        ];
-
-        const contract = new ethers.Contract(tokenAddress, abi, provider);
-        const balance = await contract.balanceOf(address);
-        const formattedBalance = ethers.utils.formatUnits(balance, 18);
-        console.log(`ERC20 Balance: ${formattedBalance}`);
-        return formattedBalance;
-      } else {
-        // ETH balance check
-        const balance = await provider.getBalance(address);
-        const formattedBalance = ethers.utils.formatEther(balance);
-        console.log(`ETH Balance: ${formattedBalance}`);
-        return formattedBalance;
-      }
-    } catch (error) {
-      console.error('Error checking balance:', error);
-      return '0';
     }
   }
 }
