@@ -5,7 +5,7 @@ on:
     # 21 PM UTC
     - cron:  '0 21 * * *'
   push:
-    branches: [main]
+    branches: [main,creating-workflow]
 
 jobs:
   test:
@@ -20,5 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+      - name: Install Node
+        run: npm i -f
       - name: Run code
         run: npx jest --verbose
