@@ -1,3 +1,5 @@
+Sure, here is the updated documentation with the corrected example code:
+
 # Intents.js SDK
 
 ## Getting Started
@@ -17,20 +19,21 @@ npm install intents.js
 Import `intents.js` into your project to begin defining intents:
 
 ```tsx
-import { IntentBuilder, Projects } from 'intents.js';
+import { IntentBuilder, Projects, Intent, Asset, Stake } from 'intents.js';
+import { ethers } from 'ethers';
 ```
 
 ## Usage
 
 ### 1. Initializing the SDK
 
-Create an instance of the `IntentSDK`:
+Create an instance of the `IntentBuilder`:
 
 ```tsx
 const intentBuilder = new IntentBuilder();
 ```
 
-### 3. Creating an Intent
+### 2. Creating an Intent
 
 To create an intent with the `intents.js` SDK, you must specify the nature of the transaction you want to execute. This involves defining the source (from) and destination (to) assets, including their types, addresses, and the amounts involved. An intent encapsulates all the details required to execute a transaction between two parties or within the blockchain environment.
 
@@ -44,22 +47,51 @@ Here’s how you can structure the creation of an intent:
 Example of creating a staking intent:
 
 ```tsx
-const intent = intentBuilder.createIntent(
-  sender, // Sender's address
-  fromMode, // e.g., 'currency'
-  fromSelectedToken, // Address of the token being sent
-  inputValue, // Amount of the token to send
-  toMode, // e.g., 'staking'
-  toSelectedToken, // Address of the token to receive
-  toAmount, // Amount of the token to receive
-  fromSelectedProject, // Associated project for the 'from' part (if any)
-  toSelectedProject, // Associated project for the 'to' part, e.g., Lido for staking
-);
+import { IntentBuilder, Projects, Intent, Asset, Stake } from 'intents.js';
+import { ethers } from 'ethers';
+
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
+
+const intentBuilder = new IntentBuilder();
+
+const sender = '0x';
+const Token 'NATIVE';
+const amount = 0.1;
+
+const fromCaseValue = {
+  case: 'fromAsset',
+  value: new Asset({
+    address: Token,
+    amount: intentBuilder.createBigInt(Number(amount)),
+    chainId: intentBuilder.createBigInt(Projects.CHAINS.Ethereum),
+  }),
+};
+
+const toCaseValue = {
+  case: 'toStake',
+  value: new Stake({
+    address: Projects.Lido,
+    chainId: intentBuilder.createBigInt(Projects.CHAINS.Ethereum),
+  }),
+};
+
+intentBuilder
+  .execute(
+    new Intent({
+      sender: sender,
+      from: fromCaseValue,
+      to: toCaseValue,
+    }),
+    signer,
+  )
+  .then(() => console.log('Intent executed successfully.'))
+  .catch(error => console.error('Error executing intent:', error));
 ```
 
 ### 4. Execute the Intent
 
-After setting up your intents array, the next step is to execute these intents using the `IntentBuilder`. This process involves calling the `execute` method on your `intentBuilder` instance, passing in the necessary parameters such as the intents array, your signing key, and the node URL. The execution is handled asynchronously.
+After setting up your intents, the next step is to execute these intents using the `IntentBuilder`. This process involves calling the `execute` method on your `intentBuilder` instance, passing in the necessary parameters such as the intents, your signing key, and the node URL. The execution is handled asynchronously.
 
 ```tsx
 intentBuilder
