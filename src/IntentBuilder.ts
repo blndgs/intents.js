@@ -1,6 +1,8 @@
 import { BytesLike, ethers } from 'ethers';
 import { BUNDLER_URL, CHAIN_ID, ENTERY_POINT, FACTORY, NODE_URL } from './Constants';
 import { Client, Presets, UserOperationBuilder } from 'userop';
+import { HttpRpcClient } from '@zerodev/userop.js';
+
 import { Intent } from 'blndgs-model/dist/asset_pb';
 
 export class IntentBuilder {
@@ -41,10 +43,34 @@ export class IntentBuilder {
     }
   }
 
-  async executeZeroDev(intents: Intent, signer: ethers.Signer): Promise<void> {
 
+  
+  async  executeZeroDev(intents: Intent, signer: ethers.Signer): Promise<void> {
+      // Initialize UserOperationBuilder
+      const builder = new UserOperationBuilder()
+  
+      // Set the signer for the UserOperationBuilder
+      builder.setSigner(signer);
+  
+      // Add the custom execution logic based on your Intent
+      builder.useDefaults({
+          to: intents.to,
+          data: intents.data,
+          value: intents.value,
+      });
+  
+      // Build the UserOperation
+      const userOp = await builder.buildOp();
+  
+      // Initialize the RPC client with the bundler URL
+      const client = new HttpRpcClient(BUNDLER_URL);
+  
+      // Send the UserOperation to the bundler
+      await client.sendUserOperation(userOp);
+  
+      console.log('User operation sent to bundler:', userOp);
   }
-
+  
 
   async execute(intents: Intent, signer: ethers.Signer): Promise<void> {
     let ownerAddress = await signer.getAddress();
