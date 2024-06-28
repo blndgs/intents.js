@@ -41,6 +41,11 @@ export class IntentBuilder {
     }
   }
 
+  async executeZeroDev(intents: Intent, signer: ethers.Signer): Promise<void> {
+
+  }
+
+
   async execute(intents: Intent, signer: ethers.Signer): Promise<void> {
     let ownerAddress = await signer.getAddress();
     console.log('ownerAddress ' + ownerAddress);
