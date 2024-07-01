@@ -21,6 +21,34 @@ export async function faucet(address: string): Promise<void> {
   }
 }
 
+export const NonceRetrieverABI = [
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+      },
+      {
+        internalType: 'uint192',
+        name: 'key',
+        type: 'uint192',
+      },
+    ],
+    name: 'getNonce',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'nonce',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+];
+
+
 export async function checkBalance(address: string, tokenAddress?: string): Promise<string> {
   const provider = new ethers.providers.JsonRpcProvider(NODE_URL);
 

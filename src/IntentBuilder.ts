@@ -1,5 +1,6 @@
 import { BytesLike, ethers } from 'ethers';
 import { BUNDLER_URL, CHAIN_ID, ENTRY_POINT, FACTORY, NODE_URL } from './Constants';
+import { NonceRetrieverABI } from './Helpers';
 import { Client, Presets, UserOperationBuilder } from 'userop';
 import { Intent } from 'blndgs-model/dist/asset_pb';
 
@@ -122,34 +123,8 @@ export class IntentBuilder {
 
   private async getNonce(sender: string): Promise<string> {
     const provider = new ethers.providers.JsonRpcProvider(NODE_URL);
-    const abi = [
-      {
-        inputs: [
-          {
-            internalType: 'address',
-            name: 'sender',
-            type: 'address',
-          },
-          {
-            internalType: 'uint192',
-            name: 'key',
-            type: 'uint192',
-          },
-        ],
-        name: 'getNonce',
-        outputs: [
-          {
-            internalType: 'uint256',
-            name: 'nonce',
-            type: 'uint256',
-          },
-        ],
-        stateMutability: 'view',
-        type: 'function',
-      },
-    ];
 
-    const contract = new ethers.Contract(ENTRY_POINT, abi, provider);
+    const contract = new ethers.Contract(ENTRY_POINT, NonceRetrieverABI, provider);
 
     try {
       const nonce = await contract.getNonce(sender, '0');

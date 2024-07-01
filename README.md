@@ -55,7 +55,6 @@ const signer = provider.getSigner();
 
 const intentBuilder = new IntentBuilder();
 
-const sender = '0x';
 const Token 'NATIVE';
 const amount = 0.1;
 
@@ -79,7 +78,6 @@ const toCaseValue = {
 intentBuilder
   .execute(
     new Intent({
-      sender: sender,
       from: fromCaseValue,
       to: toCaseValue,
     }),
