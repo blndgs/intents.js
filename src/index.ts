@@ -13,7 +13,7 @@ type ToState =
   | { value: Loan; case: 'toLoan' }
   | { case: undefined; value?: undefined };
 
-export * from './Projects';
+export * from './projects';
 export * from './IntentBuilder';
 export * from './utils';
 export * from './walletUtils';

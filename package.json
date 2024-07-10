@@ -1,6 +1,7 @@
 {
   "author": "",
   "dependencies": {
+    "@bufbuild/protobuf": "^1.10.0",
     "blndgs-model": "^0.4.0",
     "ethers": "5.7.0",
     "node-fetch": "^3.3.2",
