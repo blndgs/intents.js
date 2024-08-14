@@ -1,7 +1,7 @@
 {
   "author": "",
   "dependencies": {
-    "blndgs-model": "^0.41.1",
+    "blndgs-model": "^0.43.0",
     "ethers": "5.7.2",
     "isomorphic-fetch": "^3.0.0",
     "node-fetch": "^3.3.2",
