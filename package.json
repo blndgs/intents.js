@@ -2,7 +2,7 @@
   "author": "",
   "dependencies": {
     "blndgs-model": "^0.41.1",
-    "ethers": "5.7.2",
+    "ethers": "6.13.2",
     "isomorphic-fetch": "^3.0.0",
     "node-fetch": "^3.3.2",
     "typescript": "^5.5.4",
