@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import { CHAIN_ID, ENTRY_POINT } from './constants';
 import { Client, UserOperationBuilder } from 'userop';
-import { FromState, State, ToState } from './index';
+import { CHAINS, FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from './';
 import fetch from 'isomorphic-fetch';
 import { Account } from './Account';
@@ -40,14 +40,13 @@ export class IntentBuilder {
       to: this.setTo(to),
     });
 
-    const sender = account.sender;
-
     const intent = ethers.utils.toUtf8Bytes(JSON.stringify(intents));
-    const nonce = await account.getNonce(sender);
+    // TODO: hardcoded chainID, should be changed soon
+    const nonce = await account.getNonce(CHAINS.Ethereum, CHAINS.Ethereum);
     const initCode = await account.getInitCode(nonce);
 
     const builder = new UserOperationBuilder()
-      .useDefaults({ sender })
+      .useDefaults({ sender: account.sender })
       .setCallData(intent)
       .setPreVerificationGas('0x493E0')
       .setMaxFeePerGas('0x493E0')

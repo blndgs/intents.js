@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { IntentBuilder, toBigInt, Account } from '../src';
+import { IntentBuilder, toBigInt, Account, CHAINS } from '../src';
 import { CovalentClient } from '@covalenthq/client-sdk';
 import { Token } from './constants';
 
@@ -19,7 +19,7 @@ export async function initTest() {
   const signer = generateRandomAccount();
   return {
     intentBuilder: await IntentBuilder.createInstance(process.env.BUNDLER_URL),
-    account: await Account.createInstance(signer, process.env.BUNDLER_URL, process.env.NODE_URL),
+    account: await Account.createMultiChainInstance(signer, process.env.BUNDLER_URL, { [CHAINS.Ethereum]: process.env.NODE_URL }),
   };
 }
 

@@ -22,11 +22,11 @@ describe('Loan', () => {
         chainId: toBigInt(CHAINS.Ethereum),
       });
 
-    const initialEthBalance = await account.getBalance(TOKENS.ETH.address);
+    const initialEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
     await intentBuilder.execute(assetETH, assetWETH, account);
     await intentBuilder.execute(assetWETH, loanAaveWETH, account);
 
-    const finalEthBalance = await account.getBalance(TOKENS.ETH.address);
+    const finalEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);
   };
 
@@ -42,16 +42,16 @@ describe('Loan', () => {
         chainId: toBigInt(CHAINS.Ethereum),
       });
 
-    const initialEthBalance = await account.getBalance(TOKENS.ETH.address);
+    const initialEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
     await intentBuilder.execute(assetETH, loanAaveWETH, account);
 
-    const finalEthBalance = await account.getBalance(TOKENS.ETH.address);
+    const finalEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);
   };
 
   beforeAll(async () => {
     ({ account, intentBuilder } = await initTest());
-    await account.faucet(1);
+    await account.faucet(CHAINS.Ethereum, 1);
   });
 
   it(
@@ -68,10 +68,10 @@ describe('Loan', () => {
           chainId: toBigInt(CHAINS.Ethereum),
         });
 
-      const initialEthBalance = await account.getBalance(TOKENS.ETH.address);
+      const initialEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
       await intentBuilder.execute(assetETH, loanAaveETH, account);
 
-      const finalEthBalance = await account.getBalance(TOKENS.ETH.address);
+      const finalEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
       expect(finalEthBalance).toBeLessThan(initialEthBalance);
     },
     TIMEOUT,

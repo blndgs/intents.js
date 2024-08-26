@@ -1,5 +1,4 @@
 import { IntentBuilder, CHAINS, PROJECTS, toBigInt, Asset, Stake, Account } from '../src';
-
 import { TIMEOUT, TOKENS } from './constants';
 import { amountToBigInt, initTest } from './testUtils';
 
@@ -24,13 +23,13 @@ describe('Stake', () => {
           amount: amountToBigInt(0.1, TOKENS.ETH),
           chainId: toBigInt(CHAINS.Ethereum),
         });
-      const initialDaiBalance = await account.getBalance(TOKENS.ETH.address);
-      const initialStEthBalance = await account.getBalance(TOKENS.Steth.address);
+      const initialDaiBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
+      const initialStEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.Steth.address);
 
       await intentBuilder.execute(from, to, account);
 
-      const finalDaiBalance = await account.getBalance(TOKENS.ETH.address);
-      const finalStEthBalance = await account.getBalance(TOKENS.Steth.address);
+      const finalDaiBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.ETH.address);
+      const finalStEthBalance = await account.getBalance(CHAINS.Ethereum, TOKENS.Steth.address);
 
       expect(finalDaiBalance).toBeLessThan(initialDaiBalance);
       expect(finalStEthBalance).toBeGreaterThan(initialStEthBalance);
