@@ -19,7 +19,7 @@ jobs:
       - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20.x"
 
       - name: Install Node
         run: npm i -f
@@ -53,3 +53,11 @@ jobs:
         uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Send notification to Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_CHANNEL_SLACK_WEBHOOK_URL }}
+        run: |
+          unset PREFIX
+          npx slack-ctrf results ${{ github.workspace }}/ctrf/ctrf-report.json
+        if: always()

@@ -7,10 +7,10 @@ describe('Loan', () => {
 
   const loanWETH = async function (project: string, token: Token) {
     const assetETH = new Asset({
-        address: TOKENS.ETH.address,
-        amount: amountToBigInt(0.1, TOKENS.ETH.decimal),
-        chainId: toBigInt(CHAINS.Ethereum),
-      }),
+      address: TOKENS.ETH.address,
+      amount: amountToBigInt(0.1, TOKENS.ETH.decimal),
+      chainId: toBigInt(CHAINS.Ethereum),
+    }),
       assetWETH = new Asset({
         address: token.address,
         amount: amountToBigInt(0.1, token.decimal),
@@ -32,10 +32,10 @@ describe('Loan', () => {
 
   const ethToLoanWEth = async function (project: string, token: Token) {
     const assetETH = new Asset({
-        address: TOKENS.ETH.address,
-        amount: amountToBigInt(0.1, TOKENS.ETH.decimal),
-        chainId: toBigInt(CHAINS.Ethereum),
-      }),
+      address: TOKENS.ETH.address,
+      amount: amountToBigInt(0.1, TOKENS.ETH.decimal),
+      chainId: toBigInt(CHAINS.Ethereum),
+    }),
       loanAaveWETH = new Loan({
         address: project,
         asset: token.address,
@@ -52,7 +52,7 @@ describe('Loan', () => {
   beforeAll(async () => {
     ({ account, intentBuilder } = await initTest());
     await account.faucet(ChainID, 1);
-  });
+  }, TIMEOUT);
   // AAVE
   it('AaveWETH', async () => loanWETH(PROJECTS.Aave, TOKENS.WETH), TIMEOUT);
   // wrong token address WSTETH
@@ -68,7 +68,7 @@ describe('Loan', () => {
   // it('SparkWstETH', async () => loanWETH(PROJECTS.Spark, TOKENS.WSTETH), TIMEOUT);
 
   it('ETH->SparkWETH', async () => ethToLoanWEth(PROJECTS.Spark, TOKENS.WETH), TIMEOUT);
-  // wrong token address WSTETH
-  // it('ETH->SparkWstETH', async () => ethToLoanWEth(PROJECTS.Spark, TOKENS.WSTETH), TIMEOUT);
-  // compound either not supported by registry yet or there is some issue.
+  // compound -> USDC -> LINK
+  it('ETH->LINK', async () => ethToLoanWEth(PROJECTS.CompoundUSDCPool, TOKENS.LINK), TIMEOUT);
+  it('ETH->WETH', async () => ethToLoanWEth(PROJECTS.CompoundETHPool, TOKENS.WETH), TIMEOUT);
 });

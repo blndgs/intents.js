@@ -28,6 +28,7 @@ export async function initTest() {
   if (!process.env.NODE_URL) throw new Error('NODE_URL is missing');
   if (!process.env.CHAIN_ID) throw new Error('CHAIN_ID is missing');
   if (!process.env.MORALIS_API_KEY) throw new Error('MORALIS_API_KEY is missing');
+
   const chainConfigs: ChainConfigs = {
     888: {
       rpcUrl: process.env.NODE_URL,

@@ -17,7 +17,7 @@ export class IntentBuilder {
   private constructor(
     private _clients: Map<number, Client>,
     private _chainConfigs: Map<number, ChainConfig>,
-  ) {}
+  ) { }
 
   /**
    * Factory method to create an instance of IntentBuilder using chain configurations.

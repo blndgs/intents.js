@@ -135,7 +135,7 @@ describe('swap', () => {
   beforeAll(async () => {
     ({ account, intentBuilder } = await initTest());
     await account.faucet(ChainID, 1);
-  });
+  }, TIMEOUT);
 
   it('ETH->WETH', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.WETH, 0.1), TIMEOUT);
 
