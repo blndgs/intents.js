@@ -7,6 +7,11 @@ on:
     branches: [main, testnet, live, stage]
   workflow_dispatch:
 
+  schedule:
+    ## run at 12 pm (UTC) every day
+    ## same time we run the e2etests on the Go side too
+    - cron: "0 12 * * *"
+
 jobs:
   test:
     runs-on: ubuntu-latest
