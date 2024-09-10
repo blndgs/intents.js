@@ -77,7 +77,7 @@ jobs:
             buildNumber: $number,
             buildUrl: $url
            }
-          }' > ctrf/environment.json
+          }' > ${{ github.workspace }}/ctrf/environment.json
 
           jq -s '.[0] * .[1]' ${{ github.workspace }}/ctrf/environment.json ${{ github.workspace }}/ctrf/ctrf-report.json > ${{ github.workspace }}/ctrf/ctrf-report.json
 
