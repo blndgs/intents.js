@@ -79,7 +79,7 @@ jobs:
            }
           }' > ${{ github.workspace }}/ctrf/environment.json
 
-          jq -s '.[0] * .[1]' ${{ github.workspace }}/ctrf/environment.json ${{ github.workspace }}/ctrf/ctrf-report.json > ${{ github.workspace }}/ctrf/ctrf-report.json
+          jq -s '.[0] * .[1]' ${{ github.workspace }}/ctrf/environment.json ${{ github.workspace }}/ctrf/ctrf-report.json > ${{ github.workspace }}/ctrf/merged-report.json
 
-          npx slack-ctrf results ${{ github.workspace }}/ctrf/ctrf-report.json
+          npx slack-ctrf results ${{ github.workspace }}/ctrf/merged-report.json
         if: always()
