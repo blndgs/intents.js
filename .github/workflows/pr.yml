@@ -62,24 +62,11 @@ jobs:
       - name: Send notification to Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_CHANNEL_SLACK_WEBHOOK_URL }}
+          APP_NAME: ${{ github.repository }}
+          APP_VERSION: ${{ github.sha }}
+          BUILD_NAME: ${{ github.action }}
+          BUILD_NUMBER: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           unset PREFIX
-
-          jq -n \
-          --arg app "${{ github.repository }}" \
-          --arg build "${{ github.workflow }}" \
-          --arg number "${{ github.run_number }}" \
-          --arg url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-          '{
-            environment: {
-            appName: $app,
-            buildName: $build,
-            buildNumber: $number,
-            buildUrl: $url
-           }
-          }' > ${{ github.workspace }}/ctrf/environment.json
-
-          jq -s '.[0] * .[1]' ${{ github.workspace }}/ctrf/environment.json ${{ github.workspace }}/ctrf/ctrf-report.json > ${{ github.workspace }}/ctrf/merged-report.json
-
-          npx slack-ctrf results ${{ github.workspace }}/ctrf/merged-report.json
+          npx slack-ctrf results ${{ github.workspace }}/ctrf/ctrf-report.json
         if: always()
