@@ -64,5 +64,22 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.INTEGRATION_CHANNEL_SLACK_WEBHOOK_URL }}
         run: |
           unset PREFIX
+
+          jq -n \
+          --arg app "${{ github.repository }}" \
+          --arg build "${{ github.workflow }}" \
+          --arg number "${{ github.run_number }}" \
+          --arg url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          '{
+            environment: {
+            appName: $app,
+            buildName: $build,
+            buildNumber: $number,
+            buildUrl: $url
+           }
+          }' > ctrf/environment.json
+
+          jq -s '.[0] * .[1]' ${{ github.workspace }}/ctrf/environment.json ${{ github.workspace }}/ctrf/ctrf-report.json > ${{ github.workspace }}/ctrf/ctrf-report.json
+
           npx slack-ctrf results ${{ github.workspace }}/ctrf/ctrf-report.json
         if: always()
