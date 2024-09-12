@@ -9,14 +9,13 @@ import { ethers } from 'ethers';
  * @throws Error if the provided value is zero or negative.
  */
 export function toBigInt(value: bigint | number): ProtoBigInt {
-  if (typeof value !== 'number' && typeof value !== 'bigint') {
-    throw new Error('Value must be a number or bigint');
-  }
   // Convert all inputs to bigint to simplify handling inside the function
-  const bigIntValue = typeof value === 'bigint' ? value : BigInt(value);
+  if (typeof value !== 'number' && typeof value !== 'bigint') {
+    throw new Error('Unsupported type. Expected a number or bigint.');
+  }
+  let hexString = BigInt(value).toString(16);
 
-  let hexString = bigIntValue.toString(16);
-  hexString = hexString.length % 2 !== 0 ? '0' + hexString : hexString; // pad if necessary
+  if (hexString.length % 2 !== 0) hexString = '0' + hexString; // pad if necessary
 
   const byteArray = ethers.toBeArray(ethers.hexlify('0x' + hexString)); // create a Uint8Array
   const protoBigInt = new ProtoBigInt();
@@ -106,7 +105,7 @@ export function floatToToken(amount: number, decimals: number): bigint {
  *
  * @throws {Error} If the input amount is negative or if the conversion fails.
  */
-export function amountToBigInt(amount: number, decimal: number) {
+export function amountToBigInt(amount: number, decimal: number): ProtoBigInt {
   if (amount <= 0) {
     throw new Error('Amount must be a positive number');
   }

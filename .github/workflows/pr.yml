@@ -40,9 +40,12 @@ jobs:
 
       - name: Set Environment Variables
         run: |
-          echo "BUNDLER_URL=${{ vars[format('{0}_BUNDLER_URL', env.PREFIX)] }}" >> $GITHUB_ENV
-          echo "CHAIN_ID=${{ vars[format('{0}_CHAIN_ID', env.PREFIX)] }}" >> $GITHUB_ENV
-          echo "NODE_URL=${{ vars[format('{0}_NODE_URL', env.PREFIX)] }}" >> $GITHUB_ENV
+          echo "ETH_BUNDLER_URL=${{ vars.TESTNET_ETH_BUNDLER_URL }}" >> $GITHUB_ENV
+          echo "ETH_NODE_URL=${{ vars.TESTNET_ETH_NODE_URL }}" >> $GITHUB_ENV
+          echo "ETH_CHAIN_ID=${{ vars.TESTNET_ETH_CHAIN_ID }}" >> $GITHUB_ENV
+          echo "BSC_BUNDLER_URL=${{ vars.TESTNET_BSC_BUNDLER_URL }}" >> $GITHUB_ENV
+          echo "BSC_NODE_URL=${{ vars.TESTNET_BSC_NODE_URL }}" >> $GITHUB_ENV
+          echo "BSC_CHAIN_ID=${{ vars.TESTNET_BSC_CHAIN_ID }}" >> $GITHUB_ENV
           echo "MORALIS_API_KEY=${{ secrets.MORALIS_API_KEY }}" >> $GITHUB_ENV
 
       - name: Run Prettier

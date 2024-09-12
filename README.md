@@ -93,11 +93,11 @@ executeIntent();
 
 The SDK provides several utility functions for handling token amounts and conversions:
 
-- `toBigInt(value: ethers.BigNumber | number): ProtoBigInt`
-- `floatToWei(amount: number): ethers.BigNumber`
-- `weiToFloat(wei: ethers.BigNumber): number`
-- `tokenToFloat(amount: ethers.BigNumber, decimals: number): number`
-- `floatToToken(amount: number, decimals: number): ethers.BigNumber`
+- `toBigInt(value: bigint | number): ProtoBigInt`
+- `floatToWei(amount: number): bigint`
+- `weiToFloat(wei: bigint): number`
+- `tokenToFloat(amount: bigint, decimals: number): number`
+- `floatToToken(amount: number, decimals: number): bigint`
 - `amountToBigInt(amount: number, decimal: number): ProtoBigInt`
 
 These functions help in converting between different representations of token amounts.

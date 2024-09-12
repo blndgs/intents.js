@@ -1,7 +1,7 @@
 {
   "author": "",
   "dependencies": {
-    "blndgs-model": "^0.41.1",
+    "blndgs-model": "^0.43.0",
     "dotenv": "^16.4.5",
     "ethers": "6.13.2",
     "f": "^1.4.0",
