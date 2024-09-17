@@ -1,6 +1,9 @@
 export interface ChainConfig {
   rpcUrl: string;
   bundlerUrl: string;
+  // if not defined, it will use a default one at
+  // 0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC
+  factory?: string
 }
 
 export type ChainConfigs = Record<number, ChainConfig>;

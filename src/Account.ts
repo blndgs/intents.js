@@ -6,11 +6,14 @@ import { ChainConfigs } from './types';
 
 export class Account {
   private accounts: Map<number, { sender: string; provider: JsonRpcProvider }> = new Map();
+  // chainID -> factory contract address
+  private factoryContractAddresses: Map<number, string> = new Map();
+
   /**
    * Private constructor to enforce the use of factory methods for instantiation.
    * @param signer The ethers Signer used for transaction signing.
    */
-  private constructor(public signer: ethers.Signer) {}
+  private constructor(public signer: ethers.Signer) { }
 
   /**
    * Creates an instance of the Account class with associated chain configurations.
@@ -23,8 +26,16 @@ export class Account {
     const account = new Account(signer);
     await Promise.all(
       Object.entries(chainConfigs).map(async ([chainId, config]) => {
-        const sender = await Account.getSender(signer, config.bundlerUrl);
+
+        let factory = FACTORY;
+        if (config.factory !== undefined) {
+          factory = config.factory
+        }
+
+        const sender = await Account.getSender(signer, config.bundlerUrl, 0, factory);
         const provider = new JsonRpcProvider(config.rpcUrl);
+
+        account.factoryContractAddresses.set(Number(chainId), factory)
         account.accounts.set(Number(chainId), { sender, provider });
       }),
     );
@@ -36,12 +47,13 @@ export class Account {
    * @param signer The ethers Signer for signing transactions.
    * @param bundlerUrl URL of the bundler to customize sender address generation.
    * @param salt Optional nonce or unique identifier to customize the sender address generation further.
+   * @param factory Optional factory address to interact with when generating the sender.
    * @returns The Ethereum address as a string.
    */
-  static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0): Promise<string> {
+  static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0, factory: string = FACTORY): Promise<string> {
     // Convert salt to a number, then to a hex string
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
-      factory: FACTORY,
+      factory: factory,
       salt: salt,
     });
     return simpleAccount.getSender();
@@ -58,11 +70,17 @@ export class Account {
     if (!account) {
       throw new Error(`No account found for chain ID ${chainId}`);
     }
+
+    const factory = this.factoryContractAddresses.get(chainId)
+    if (!factory) {
+      throw new Error(`No factory contract address found for chain ID ${chainId}`);
+    }
+
     let ownerAddress = await this.signer.getAddress();
     ownerAddress = ownerAddress.substring(2); // Remove 0x value
     return nonce !== '0'
       ? '0x'
-      : `${FACTORY}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`;
+      : `${factory}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`;
   }
 
   /**
