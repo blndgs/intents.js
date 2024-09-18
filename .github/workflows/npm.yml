@@ -14,7 +14,7 @@ jobs:
           node-version: "20"
       - run: npm ci
       - run: npm run build
-      - name: Publish to NPM
+      - name: Semantic release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
