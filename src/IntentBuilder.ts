@@ -62,8 +62,7 @@ export class IntentBuilder {
       to: this.setTo(to),
     });
 
-    const solveHash = await this._innerExecute(account, chainId, ethers.toUtf8Bytes(JSON.stringify(intents)));
-    return solveHash;
+    return await this._innerExecute(account, chainId, ethers.toUtf8Bytes(JSON.stringify(intents)));
   }
 
   /**
@@ -75,8 +74,7 @@ export class IntentBuilder {
    * @returns A promise that resolves when the transaction has been executed.
    */
   async executeStandardUserOps(account: Account, chainId: number, calldata?: string): Promise<string> {
-    const solvedHash = await this._innerExecute(account, chainId, calldata ?? ethers.toUtf8Bytes('0x'));
-    return solvedHash;
+    return await this._innerExecute(account, chainId, calldata ?? ethers.toUtf8Bytes('0x'));
   }
 
   private async _innerExecute(account: Account, chainId: number, calldata: BytesLike): Promise<string> {
