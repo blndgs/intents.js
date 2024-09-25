@@ -23,3 +23,35 @@ export function createChainConfig(rpcUrl: string, bundlerUrl: string): ChainConf
     bundlerUrl,
   };
 }
+
+export interface UserOpExecutionResponse {
+  userOpHash: {
+    success: boolean;
+    original_hash: string;
+    solved_hash: string;
+    trx: string;
+  };
+}
+
+/**
+ *
+ * Takes in an object. Then validates that it matches the expected value we are
+ * expecting as a response from the Bundler
+ *
+ * @param obj the object to validate
+ */
+export function isUserOpExecutionResponse(obj: unknown): obj is UserOpExecutionResponse {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  const candidate = obj as Pick<UserOpExecutionResponse, 'userOpHash'>;
+  const userOpHash = candidate.userOpHash ?? {};
+
+  return (
+    typeof userOpHash.success === 'boolean' &&
+    typeof userOpHash.original_hash === 'string' &&
+    typeof userOpHash.solved_hash === 'string' &&
+    typeof userOpHash.trx === 'string'
+  );
+}

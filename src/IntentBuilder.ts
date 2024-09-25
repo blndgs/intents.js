@@ -1,5 +1,5 @@
 import { BytesLike, ethers } from 'ethers';
-import { ChainConfig } from './types';
+import { ChainConfig, isUserOpExecutionResponse } from './types';
 import { ENTRY_POINT } from './constants';
 import { Client, UserOperationBuilder } from 'userop';
 import { FromState, State, ToState } from './index';
@@ -67,7 +67,7 @@ export class IntentBuilder {
   }
 
   /**
-   * Executes a standad userops without runnign this through Balloondogs' solver.
+   * Executes a standard userops without running and solving through Balloondogs.
    * @param account The user account performing the transaction.
    * @param chainId the custom chain id for the transaction.
    * (important: though chainId is not required field which will be removed in future, we need it because our test network using custom chain IDs)
@@ -110,9 +110,11 @@ export class IntentBuilder {
 
     const res = await client.sendUserOperation(builder);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const solvedHash = (res as any).userOpHash.solved_hash;
-    return solvedHash;
+    if (!isUserOpExecutionResponse(res)) {
+      throw new Error(`Unexpected response from Bundler`);
+    }
+
+    return res.userOpHash.solved_hash;
   }
 
   /**
