@@ -66,6 +66,14 @@ export class IntentBuilder {
     return solveHash;
   }
 
+  /**
+   * Executes a standad userops without runnign this through Balloondogs' solver.
+   * @param account The user account performing the transaction.
+   * @param chainId the custom chain id for the transaction.
+   * (important: though chainId is not required field which will be removed in future, we need it because our test network using custom chain IDs)
+   * @param calldata this is the calldata you want to execute. If empty or not provided, it will default to 0x
+   * @returns A promise that resolves when the transaction has been executed.
+   */
   async executeStandardUserOps(account: Account, chainId: number, calldata?: string): Promise<string> {
     const solvedHash = await this._innerExecute(account, chainId, calldata ?? ethers.toUtf8Bytes('0x'));
     return solvedHash;
