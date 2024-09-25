@@ -96,6 +96,40 @@ export class IntentBuilder {
     return solvedHash;
   }
 
+  async executeStandardUserOps(account: Account, chainId: number, calldata?: string): Promise<string> {
+    const client = this._clients.get(chainId);
+    if (!client) {
+      throw new Error(`Client for chain ID ${chainId} not found`);
+    }
+
+    const chainConfig = this._chainConfigs.get(chainId);
+    if (!chainConfig) {
+      throw new Error(`Configuration for chain ID ${chainId} not found`);
+    }
+
+    const sender = account.getSender(chainId);
+    const nonce = await account.getNonce(chainId, sender);
+    const initCode = await account.getInitCode(chainId, nonce);
+
+    const builder = new UserOperationBuilder()
+      .useDefaults({ sender })
+      .setCallData(calldata ?? ethers.toUtf8Bytes('0x'))
+      .setPreVerificationGas('0x493E0')
+      .setMaxFeePerGas('0x493E0')
+      .setMaxPriorityFeePerGas('0')
+      .setVerificationGasLimit('0x493E0')
+      .setCallGasLimit('0xC3500')
+      .setNonce(nonce)
+      .setInitCode(initCode);
+    const signature = await this.sign(chainId, account, builder);
+    builder.setSignature(signature);
+    const res = await client.sendUserOperation(builder);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const solvedHash = (res as any).userOpHash.solved_hash;
+    return solvedHash;
+  }
+
   /**
    * Gets the chain configuration for a specific chain ID.
    * @param chainId The ID of the chain.
