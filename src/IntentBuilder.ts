@@ -74,7 +74,7 @@ export class IntentBuilder {
    * @returns A promise that resolves when the transaction has been executed.
    */
   async executeStandardUserOps(account: Account, chainId: number, calldata?: string): Promise<string> {
-    return await this._innerExecute(account, chainId, calldata ?? ethers.toUtf8Bytes('0x'));
+    return await this._innerExecute(account, chainId, calldata ?? '0x');
   }
 
   private async _innerExecute(account: Account, chainId: number, calldata: BytesLike): Promise<string> {
