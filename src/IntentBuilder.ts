@@ -1,6 +1,13 @@
 import { BytesLike, ethers } from 'ethers';
-import { ChainConfig, isUserOpExecutionResponse } from './types';
-import { ENTRY_POINT } from './constants';
+import { ChainConfig, isUserOpExecutionResponse, UserOpOptions } from './types';
+import {
+  CALL_GAS_LIMIT,
+  ENTRY_POINT,
+  MAX_FEE_PER_GAS,
+  MAX_PRIORITY_FEE_PER_GAS,
+  PRE_VERIFICATION_GAS,
+  VERIFICATION_GAS_LIMIT,
+} from './constants';
 import { Client, UserOperationBuilder } from 'userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
@@ -62,7 +69,14 @@ export class IntentBuilder {
       to: this.setTo(to),
     });
 
-    return await this._innerExecute(account, chainId, ethers.toUtf8Bytes(JSON.stringify(intents)));
+    return await this._innerExecute(account, chainId, {
+      calldata: ethers.toUtf8Bytes(JSON.stringify(intents)),
+      maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+      verificationGasLimit: VERIFICATION_GAS_LIMIT,
+      callGasLimit: CALL_GAS_LIMIT,
+      preVerificationGas: PRE_VERIFICATION_GAS,
+      maxFeePerGas: MAX_FEE_PER_GAS,
+    });
   }
 
   /**
@@ -70,14 +84,32 @@ export class IntentBuilder {
    * @param account The user account performing the transaction.
    * @param chainId the custom chain id for the transaction.
    * (important: though chainId is not required field which will be removed in future, we need it because our test network using custom chain IDs)
-   * @param calldata this is the calldata you want to execute. If empty or not provided, it will default to 0x
+   * @param opts execution options. You will be able to configure the amount of gas and fee you spend
    * @returns A promise that resolves when the transaction has been executed.
    */
-  async executeStandardUserOps(account: Account, chainId: number, calldata?: string): Promise<string> {
-    return await this._innerExecute(account, chainId, calldata ?? '0x');
+  async executeStandardUserOps(account: Account, chainId: number, opts: UserOpOptions): Promise<string> {
+    return await this._innerExecute(account, chainId, {
+      calldata: opts.calldata ?? '0x',
+      maxFeePerGas: opts.maxFeePerGas,
+      preVerificationGas: PRE_VERIFICATION_GAS,
+      callGasLimit: opts.callGasLimit,
+      verificationGasLimit: opts.verificationGasLimit ?? VERIFICATION_GAS_LIMIT,
+      maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
+    });
   }
 
-  private async _innerExecute(account: Account, chainId: number, calldata: BytesLike): Promise<string> {
+  private async _innerExecute(
+    account: Account,
+    chainId: number,
+    opts: {
+      calldata: BytesLike;
+      preVerificationGas: string;
+      maxFeePerGas: string;
+      maxPriorityFeePerGas: string;
+      verificationGasLimit: string;
+      callGasLimit: string;
+    },
+  ): Promise<string> {
     const client = this._clients.get(chainId);
     if (!client) {
       throw new Error(`Client for chain ID ${chainId} not found`);
@@ -94,12 +126,12 @@ export class IntentBuilder {
 
     const builder = new UserOperationBuilder()
       .useDefaults({ sender })
-      .setCallData(calldata)
-      .setPreVerificationGas('0x493E0')
-      .setMaxFeePerGas('0x493E0')
-      .setMaxPriorityFeePerGas('0')
-      .setVerificationGasLimit('0x493E0')
-      .setCallGasLimit('0xC3500')
+      .setCallData(opts.calldata)
+      .setPreVerificationGas(opts.preVerificationGas)
+      .setMaxFeePerGas(opts.maxFeePerGas)
+      .setMaxPriorityFeePerGas(opts.maxPriorityFeePerGas)
+      .setVerificationGasLimit(opts.verificationGasLimit)
+      .setCallGasLimit(opts.callGasLimit)
       .setNonce(nonce)
       .setInitCode(initCode);
 

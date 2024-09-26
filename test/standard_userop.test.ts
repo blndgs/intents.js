@@ -2,6 +2,7 @@ import fetch from 'isomorphic-fetch';
 import { IntentBuilder, Account } from '../src';
 import { ChainID, TIMEOUT, TOKENS } from './constants';
 import { initTest } from './testUtils';
+import { CALL_GAS_LIMIT, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS, VERIFICATION_GAS_LIMIT } from '../src/constants';
 
 async function fundUserWallet(token: string, addr: string, rpcURL: string): Promise<void> {
   const reqBody = JSON.stringify({
@@ -39,7 +40,12 @@ describe('Conventional userops', () => {
     async () => {
       const initialETHBalance = await account.getBalance(ChainID, TOKENS.ETH.address);
 
-      await intentBuilder.executeStandardUserOps(account, ChainID);
+      await intentBuilder.executeStandardUserOps(account, ChainID, {
+        callGasLimit: CALL_GAS_LIMIT,
+        maxFeePerGas: MAX_FEE_PER_GAS,
+        maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+        verificationGasLimit: VERIFICATION_GAS_LIMIT,
+      });
 
       const finalETHBalance = await account.getBalance(ChainID, TOKENS.ETH.address);
 

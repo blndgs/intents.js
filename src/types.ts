@@ -1,3 +1,5 @@
+import { BytesLike } from 'ethers';
+
 export interface ChainConfig {
   rpcUrl: string;
   bundlerUrl: string;
@@ -22,6 +24,19 @@ export function createChainConfig(rpcUrl: string, bundlerUrl: string): ChainConf
     rpcUrl,
     bundlerUrl,
   };
+}
+
+/**
+ * Constructs the options to allow configurability of
+ * non Ballondogs sponspored intents.
+ *
+ */
+export interface UserOpOptions {
+  calldata?: BytesLike;
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
+  verificationGasLimit?: string;
+  callGasLimit: string;
 }
 
 export interface UserOpExecutionResponse {
