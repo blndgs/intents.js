@@ -89,6 +89,18 @@ async function executeIntent() {
 executeIntent();
 ```
 
+#### 2b. Sending a conventional userop and skipping Balloondogs solver
+
+```typescript
+await intentBuilder.executeStandardUserOps(account, ChainID, {
+  calldata: '0x', // optional
+  callGasLimit: CALL_GAS_LIMIT,
+  maxFeePerGas: MAX_FEE_PER_GAS,
+  maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+  verificationGasLimit: VERIFICATION_GAS_LIMIT,
+});
+```
+
 ### 3. Utility Functions
 
 The SDK provides several utility functions for handling token amounts and conversions:
