@@ -31,7 +31,26 @@ import { ethers } from 'ethers';
 Create an instance of the `IntentBuilder`:
 
 ```typescript
-const intentBuilder = await IntentBuilder.createInstance(BUNDLER_URL);
+import { ethers } from 'ethers';
+import { Account, IntentBuilder } from 'intents.js';
+
+const chainConfigs = {
+  // testnet
+  888: {
+    rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/13d45a24-2474-431e-8f19-31f251f6cd2a',
+    bundlerUrl: 'https://eth.bundler.test.balloondogs.network',
+  },
+  890: {
+    rpcUrl: 'https://virtual.binance.rpc.tenderly.co/4e9d15b6-3c42-43b7-a254-359a7893e8e6',
+    bundlerUrl: 'https://bsc.bundler.test.balloondogs.network',
+  },
+};
+
+const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
+
+const signer = new ethers.Wallet('private key');
+
+const account = await Account.createInstance(signer, chainConfigs);
 ```
 
 ### 2. Creating and Executing an Intent
@@ -40,43 +59,29 @@ To create and execute an intent with the `intents.js` SDK, you need to specify t
 
 Here's an example of creating and executing a swap intent:
 
+> [!NOTE]
+> this uses the `account` and `intentBuilder` we created in the previous snippet
+
 ```typescript
-import { IntentBuilder, PROJECTS, CHAINS, Asset, Stake, toBigInt, Account, amountToBigInt } from './src';
 import { ethers } from 'ethers';
-import { ChainConfigs } from './src/types';
-
-const signer = new ethers.Wallet('private key');
-
-const amount = 0.1;
-const ethAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-const ethDecimals = 18;
-
-const from = new Asset({
-  address: ethAddress,
-  amount: amountToBigInt(amount, ethDecimals),
-  chainId: toBigInt(CHAINS.Ethereum),
-});
-
-const to = new Stake({
-  amount: amountToBigInt(amount, ethDecimals),
-  address: PROJECTS.Lido,
-  chainId: toBigInt(CHAINS.Ethereum),
-});
+import { Account, IntentBuilder, toBigInt, amountToBigInt, Asset, Stake } from 'intents.js';
 
 async function executeIntent() {
-  const chainConfigs: ChainConfigs = {
-    888: {
-      rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/13d45a24-2474-431e-8f19-31f251f6cd2a',
-      bundlerUrl: 'https://eth.bundler.dev.balloondogs.network',
-    },
-    890: {
-      rpcUrl: 'https://virtual.binance.rpc.tenderly.co/4e9d15b6-3c42-43b7-a254-359a7893e8e6',
-      bundlerUrl: 'https://bsc.bundler.dev.balloondogs.network',
-    },
-  };
+  const amount = 0.1;
+  const ethAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  const ethDecimals = 18;
 
-  const account = await Account.createInstance(signer, chainConfigs);
-  const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
+  const from = new Asset({
+    address: ethAddress,
+    amount: amountToBigInt(amount, ethDecimals),
+    chainId: toBigInt(CHAINS.Ethereum),
+  });
+
+  const to = new Stake({
+    amount: amountToBigInt(amount, ethDecimals),
+    address: PROJECTS.Lido,
+    chainId: toBigInt(CHAINS.Ethereum),
+  });
 
   try {
     await intentBuilder.execute(from, to, account, 888);
@@ -88,6 +93,9 @@ async function executeIntent() {
 
 executeIntent();
 ```
+
+> [!NOTE] > `888` is the chain id we are executing the transaction on, this can be configured from the
+> `chainConfigs` object
 
 #### 2b. Sending a conventional userop and skipping Balloondogs solver
 
@@ -101,7 +109,25 @@ await intentBuilder.executeStandardUserOps(account, ChainID, {
 });
 ```
 
-### 3. Utility Functions
+### 3. Fetch onchain receipt of executed transaction
+
+```typescript
+
+const solvedHash = await intentBuilder.execute(from, to, account, 888)
+
+const receipt = await intentBuilder.getReceipt(888, solvedHash)
+
+const txHash = receipt.result.receipt.transactionHash
+
+console.log(`
+View your tx onchain using any explorer: \n
+
+Hash: ${txHash}
+BNBScan: https://bscscan.com/tx/${txHash}
+`
+```
+
+### 4. Utility Functions
 
 The SDK provides several utility functions for handling token amounts and conversions:
 
@@ -114,7 +140,7 @@ The SDK provides several utility functions for handling token amounts and conver
 
 These functions help in converting between different representations of token amounts.
 
-### 4. Supported Projects
+### 5. Supported Projects
 
 The `PROJECTS` object provides addresses for various DeFi projects:
 
