@@ -20,84 +20,68 @@ npm install intents.js
 Import `intents.js` into your project to begin defining intents:
 
 ```typescript
-import { IntentBuilder, PROJECTS, CHAINS, toBigInt, Asset, Stake } from 'intents.js';
+import { Account, IntentBuilder, PROJECTS, CHAINS, toBigInt, amountToBigInt, Asset, Stake } from 'intents.js';
 import { ethers } from 'ethers';
-```
-
-## Usage
-
-### 1. Initializing the SDK
-
-Create an instance of the `IntentBuilder`:
-
-```typescript
-import { ethers } from 'ethers';
-import { Account, IntentBuilder } from 'intents.js';
 
 const chainConfigs = {
-  // testnet
-  888: {
-    rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/13d45a24-2474-431e-8f19-31f251f6cd2a',
-    bundlerUrl: 'https://eth.bundler.test.balloondogs.network',
+  1: {
+    rpcUrl: 'YOUR_ETH_RPC_URL',
+    bundlerUrl: 'https://eth.bundler.balloondogs.network',
   },
-  890: {
-    rpcUrl: 'https://virtual.binance.rpc.tenderly.co/4e9d15b6-3c42-43b7-a254-359a7893e8e6',
-    bundlerUrl: 'https://bsc.bundler.test.balloondogs.network',
+  56: {
+    rpcUrl: 'YOUR_BNB_RPC_URL',
+    bundlerUrl: 'https://bsc.bundler.balloondogs.network',
   },
 };
 
 const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
 
-const signer = new ethers.Wallet('private key');
+const signer = new ethers.Wallet('your private key');
 
 const account = await Account.createInstance(signer, chainConfigs);
 ```
 
-### 2. Creating and Executing an Intent
+### 3. Creating an Intent
 
-To create and execute an intent with the `intents.js` SDK, you need to specify the details of the transaction you want to perform. This involves defining the source (from) and destination (to) assets, including their types, addresses, and amounts.
+To create and execute an intent with the `intents.js` SDK, you need to specify the details of
+the transaction you want to perform. This involves defining the source (from) and destination (to)
+assets, including their types, addresses, and amounts. These types could be either another asset
+which indicates asset swaps, or could be stakes or loan supply to a DeFi protocol
 
 Here's an example of creating and executing a swap intent:
 
-> [!NOTE]
-> this uses the `account` and `intentBuilder` we created in the previous snippet
-
 ```typescript
-import { ethers } from 'ethers';
-import { Account, IntentBuilder, toBigInt, amountToBigInt, Asset, Stake } from 'intents.js';
+const amount = 0.1;
+const ethAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const ethDecimals = 18;
 
-async function executeIntent() {
-  const amount = 0.1;
-  const ethAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-  const ethDecimals = 18;
+const from = new Asset({
+  address: ethAddress,
+  amount: amountToBigInt(amount, ethDecimals),
+  chainId: toBigInt(CHAINS.Ethereum),
+});
 
-  const from = new Asset({
-    address: ethAddress,
-    amount: amountToBigInt(amount, ethDecimals),
-    chainId: toBigInt(CHAINS.Ethereum),
-  });
-
-  const to = new Stake({
-    amount: amountToBigInt(amount, ethDecimals),
-    address: PROJECTS.Lido,
-    chainId: toBigInt(CHAINS.Ethereum),
-  });
-
-  try {
-    await intentBuilder.execute(from, to, account, 888);
-    console.log('Intent executed successfully.');
-  } catch (error) {
-    console.error('Error executing intent:', error);
-  }
-}
-
-executeIntent();
+const to = new Stake({
+  amount: amountToBigInt(amount, ethDecimals),
+  address: PROJECTS.Lido,
+  chainId: toBigInt(CHAINS.Ethereum),
+});
 ```
 
-> [!NOTE] > `888` is the chain id we are executing the transaction on, this can be configured from the
-> `chainConfigs` object
+### 4. Execute the intent
 
-#### 2b. Sending a conventional userop and skipping Balloondogs solver
+```typescript
+// 1 is the chain id we are executing the transaction on, this can be configured from the
+//chainConfigs object
+try {
+  const solvedHash = await intentBuilder.execute(from, to, account, 1);
+  console.log('Intent executed successfully.');
+} catch (error) {
+  console.error('Error executing intent:', error);
+}
+```
+
+#### 4b. Sending a conventional userop and skipping Balloondogs solver
 
 ```typescript
 await intentBuilder.executeStandardUserOps(account, ChainID, {
@@ -109,13 +93,11 @@ await intentBuilder.executeStandardUserOps(account, ChainID, {
 });
 ```
 
-### 3. Fetch onchain receipt of executed transaction
+### 5. Fetch onchain receipt of executed transaction
 
 ```typescript
 
-const solvedHash = await intentBuilder.execute(from, to, account, 888)
-
-const receipt = await intentBuilder.getReceipt(888, solvedHash)
+const receipt = await intentBuilder.getReceipt(1, solvedHash)
 
 const txHash = receipt.result.receipt.transactionHash
 
@@ -127,7 +109,7 @@ BNBScan: https://bscscan.com/tx/${txHash}
 `
 ```
 
-### 4. Utility Functions
+### 6. Utility Functions
 
 The SDK provides several utility functions for handling token amounts and conversions:
 
