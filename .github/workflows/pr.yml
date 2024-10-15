@@ -46,6 +46,9 @@ jobs:
           echo "BSC_BUNDLER_URL=${{ vars.TESTNET_BSC_BUNDLER_URL }}" >> $GITHUB_ENV
           echo "BSC_NODE_URL=${{ vars.TESTNET_BSC_NODE_URL }}" >> $GITHUB_ENV
           echo "BSC_CHAIN_ID=${{ vars.TESTNET_BSC_CHAIN_ID }}" >> $GITHUB_ENV
+          echo "BSC_BUNDLER_URL=${{ vars.TESTNET_POL_BUNDLER_URL }}" >> $GITHUB_ENV
+          echo "BSC_NODE_URL=${{ vars.TESTNET_POL_NODE_URL }}" >> $GITHUB_ENV
+          echo "BSC_CHAIN_ID=${{ vars.TESTNET_POL_CHAIN_ID }}" >> $GITHUB_ENV
           echo "MORALIS_API_KEY=${{ secrets.MORALIS_API_KEY }}" >> $GITHUB_ENV
 
       - name: Run Prettier
