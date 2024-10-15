@@ -1,13 +1,26 @@
 import { BytesLike } from 'ethers';
 
+/**
+ * Configuration for a specific blockchain network.
+ */
 export interface ChainConfig {
   rpcUrl: string;
   bundlerUrl: string;
-  // if not defined, it will use a default one at
-  // 0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC
   factory?: string;
 }
 
+/**
+ * A record of chain configurations, indexed by chain ID.
+ * @typedef {Object.<number, ChainConfig>} ChainConfigs
+ * @description
+ * This type represents a collection of chain configurations.
+ * The keys are chain IDs (numbers) and the values are the corresponding ChainConfig objects.
+ * @example
+ * const configs: ChainConfigs = {
+ *   1: { rpcUrl: "https://eth-mainnet.example.com", bundlerUrl: "https://bundler.example.com", factory: "0x..." },
+ *   56: { rpcUrl: "https://bsc-mainnet.example.com", bundlerUrl: "https://bsc-bundler.example.com", factory: "0x..." }
+ * };
+ */
 export type ChainConfigs = Record<number, ChainConfig>;
 
 /**
