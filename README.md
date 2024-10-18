@@ -3,6 +3,12 @@
 ![NPM Version](https://img.shields.io/npm/v/intents.js)
 ![codecov](https://codecov.io/gh/blndgs/intents.js/graph/badge.svg?token=TAVORU8E7D)
 
+## Supported Chains
+
+- [x] Ethereum
+- [x] Binance
+- [x] Polygon
+
 ## Getting Started
 
 You can find the full `intents.js` documentation at [docs.balloondogs.network](https://docs.balloondogs.network/solution/sdk)

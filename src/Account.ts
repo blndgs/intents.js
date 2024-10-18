@@ -26,7 +26,7 @@ export class Account {
     const account = new Account(signer);
     await Promise.all(
       Object.entries(chainConfigs).map(async ([chainId, config]) => {
-        let factory = FACTORY;
+        let factory = FACTORY[Number(chainId)];
         if (config.factory !== undefined) {
           factory = config.factory;
         }
@@ -53,7 +53,7 @@ export class Account {
     signer: ethers.Signer,
     bundlerUrl: string,
     salt: number = 0,
-    factory: string = FACTORY,
+    factory: string,
   ): Promise<string> {
     // Convert salt to a number, then to a hex string
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {

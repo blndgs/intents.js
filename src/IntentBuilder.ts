@@ -2,12 +2,12 @@ import { BytesLike, ethers } from 'ethers';
 import { ChainConfig, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
 import {
   CALL_GAS_LIMIT,
-  ENTRY_POINT,
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
   PRE_VERIFICATION_GAS,
   VERIFICATION_GAS_LIMIT,
 } from './constants';
+import { buildUserOp, computeMessageHash, computeUserOpHash, generateSignature, verifySignature } from './utils';
 import { Client, UserOperationBuilder } from 'userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
@@ -54,14 +54,8 @@ export class IntentBuilder {
    * @returns A promise that resolves when the transaction has been executed.
    */
   async execute(from: State, to: State, account: Account, chainId: number): Promise<UserOpExecutionResponse> {
-    // TODO:: will be remove in future
     if (chainId === undefined || chainId === 0) {
       throw new Error('chainId is null or zero');
-    }
-    // Ensure the chain IDs match for multi chain
-    // TODO:: it will be revised for the cross chain integration
-    if (!from.chainId?.equals(to.chainId)) {
-      throw new Error('Chain IDs do not match');
     }
 
     const intents = new Intent({
@@ -77,6 +71,61 @@ export class IntentBuilder {
       preVerificationGas: PRE_VERIFICATION_GAS,
       maxFeePerGas: MAX_FEE_PER_GAS,
     });
+  }
+
+  /**
+   * Executes the same UserOperation across different chains (source and destination).
+   */
+  async executeCrossChain(
+    fromState: State,
+    toState: State,
+    account: Account,
+    sourceChainId: number,
+    destChainId: number,
+  ): Promise<UserOpExecutionResponse[]> {
+    // Ensure the chain IDs are provided and are valid
+    if (sourceChainId === destChainId) {
+      throw new Error('Source and destination chain IDs cannot be the same');
+    }
+    const chainIDs = [sourceChainId, destChainId];
+    // Step 1: Build the UserOperation for the source chain
+    const userOpBuilder = await buildUserOp(sourceChainId, account, {
+      calldata: ethers.toUtf8Bytes(
+        JSON.stringify(new Intent({ from: this.setFrom(fromState), to: this.setTo(toState) })),
+      ),
+      maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+      verificationGasLimit: VERIFICATION_GAS_LIMIT,
+      callGasLimit: CALL_GAS_LIMIT,
+      preVerificationGas: PRE_VERIFICATION_GAS,
+      maxFeePerGas: MAX_FEE_PER_GAS,
+    });
+
+    // Step 2: Create a copy of the UserOperation for the destination chain
+    // both source and destination chain have same userOps.
+    const userOps = [userOpBuilder, userOpBuilder];
+
+    // Step 3: xSign UserOperations
+    const signature = this.xSign(chainIDs, account, userOps);
+    // Step 4: Assign the signature to all UserOperations
+    for (const op of userOps) {
+      op.setSignature(await signature);
+    }
+
+    // Step 5: Send each signed UserOperation to the respective bundler
+    const responses: UserOpExecutionResponse[] = [];
+    for (let i = 0; i < userOps.length; i++) {
+      const client = this._clients.get([sourceChainId, destChainId][i]);
+      if (!client) {
+        throw new Error(`Client for chain ID ${[sourceChainId, destChainId][i]} not found`);
+      }
+      const res = await client.sendUserOperation(userOps[i]);
+      if (!isUserOpExecutionResponse(res)) {
+        throw new Error(`Unexpected response from Bundler on chain ID ${[sourceChainId, destChainId][i]}`);
+      }
+      responses.push(res);
+    }
+
+    return responses;
   }
 
   /**
@@ -209,30 +258,34 @@ export class IntentBuilder {
    * @returns The signature as a string.
    */
   private async sign(chainId: number, account: Account, builder: UserOperationBuilder) {
-    const userOp = builder.getOp();
-    const packedData = ethers.AbiCoder.defaultAbiCoder().encode(
-      ['address', 'uint256', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
-      [
-        userOp.sender,
-        userOp.nonce.toString(),
-        ethers.keccak256(userOp.initCode as BytesLike),
-        ethers.keccak256(userOp.callData as BytesLike),
-        userOp.callGasLimit.toString(),
-        userOp.verificationGasLimit.toString(),
-        userOp.preVerificationGas.toString(),
-        userOp.maxFeePerGas.toString(),
-        userOp.maxPriorityFeePerGas.toString(),
-        ethers.keccak256(userOp.paymasterAndData as BytesLike),
-      ],
-    );
-
-    const enc = ethers.AbiCoder.defaultAbiCoder().encode(
-      ['bytes32', 'address', 'uint256'],
-      [ethers.keccak256(packedData), ENTRY_POINT, chainId],
-    );
-
-    const userOpHash = ethers.keccak256(enc);
+    const userOpHash = computeUserOpHash(chainId, builder);
     return await account.signer.signMessage(ethers.getBytes(userOpHash));
+  }
+
+  /**
+   * xSign: Signs multiple UserOperations across different chains (cross-chain) using UserOperationBuilder.
+   * @param chainIds Array of chain IDs for cross-chain signing.
+   * @param account Account used for signing the UserOperations.
+   * @param builders UserOperationBuilder instances representing the UserOperations.
+   * @returns A promise that resolves to the signature string.
+   */
+  private async xSign(chainIds: number[], account: Account, builders: UserOperationBuilder[]) {
+    if (chainIds.length !== builders.length) {
+      throw new Error('Number of chainIds and userOps must match');
+    }
+
+    const messageHash = computeMessageHash(chainIds, builders);
+
+    // Generate signature
+    const signature = await generateSignature(messageHash, account);
+
+    // Verify the signature
+    const isValid = await verifySignature(messageHash, signature, account);
+    if (!isValid) {
+      throw new Error('Signature is invalid');
+    }
+
+    return signature;
   }
 
   /**
