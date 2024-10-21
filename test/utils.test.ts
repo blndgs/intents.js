@@ -184,8 +184,8 @@ describe('computeMessageHash', () => {
     const chainIds = [1, 56];
 
     const hash = computeMessageHash(chainIds, [mockBuilder1, mockBuilder2]);
-    const expectedHsh = '0xd9838e154a554803476cd7fdc53c9837e3e43e466cc13ae55848885901ab4150';
-    expect(hash).toEqual(expectedHsh);
+    const expectedHash = '0xd9838e154a554803476cd7fdc53c9837e3e43e466cc13ae55848885901ab4150';
+    expect(hash).toEqual(expectedHash);
   });
 
   it('should throw an error if chainIDs and builders lengths do not match', () => {

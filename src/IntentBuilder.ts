@@ -102,7 +102,9 @@ export class IntentBuilder {
 
     // Step 2: Create a copy of the UserOperation for the destination chain
     // both source and destination chain have same userOps.
-    const userOps = [userOpBuilder, userOpBuilder];
+    const destUserOpBuilder = new UserOperationBuilder();
+    destUserOpBuilder.useDefaults(userOpBuilder.getOp());
+    const userOps = [userOpBuilder, destUserOpBuilder];
 
     // Step 3: xSign UserOperations
     const signature = this.xSign(chainIDs, account, userOps);
