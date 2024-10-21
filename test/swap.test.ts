@@ -1,5 +1,5 @@
 import { IntentBuilder, CHAINS, toBigInt, Asset, Account, floatToToken, weiToFloat, amountToBigInt } from '../src';
-import { ChainID, TIMEOUT, Token, TOKENS } from './constants';
+import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
 import { getPrice, initTest } from './testUtils';
 
 /** Maximum allowed slippage for swaps (2%) */
@@ -134,71 +134,121 @@ describe('swap', () => {
   // Initialize test environment
   beforeAll(async () => {
     ({ account, intentBuilder } = await initTest());
-    await account.faucet(ChainID, 1);
+    await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
 
-  it('ETH->WETH', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.WETH, 0.1), TIMEOUT);
+  it(
+    'ETH->WETH',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].WETH, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'WETH->ETH',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.WETH.address);
-      await checkAndSwap(ChainID, TOKENS.WETH, TOKENS.ETH, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].WETH.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].WETH,
+        TOKENS[CHAINS.Ethereum].ETH,
+        balance,
+      );
     },
     TIMEOUT,
   );
 
-  it('ETH->DAI', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.DAI, 0.1), TIMEOUT);
+  it(
+    'ETH->DAI',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].DAI, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'DAI->ETH',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.DAI.address);
-      await checkAndSwap(ChainID, TOKENS.DAI, TOKENS.ETH, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].DAI.address);
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].DAI, TOKENS[CHAINS.Ethereum].ETH, balance);
     },
     TIMEOUT,
   );
 
-  it('ETH->LINK', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.LINK, 0.1), TIMEOUT);
+  it(
+    'ETH->LINK',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].LINK, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'LINK->ETH',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.LINK.address);
-      await checkAndSwap(ChainID, TOKENS.LINK, TOKENS.ETH, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].LINK.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].LINK,
+        TOKENS[CHAINS.Ethereum].ETH,
+        balance,
+      );
     },
     TIMEOUT,
   );
 
-  it('ETH->USDC', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.USDC, 0.1), TIMEOUT);
+  it(
+    'ETH->USDC',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].USDC, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'USDC->ETH',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.USDC.address);
-      await checkAndSwap(ChainID, TOKENS.USDC, TOKENS.ETH, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].USDC.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].USDC,
+        TOKENS[CHAINS.Ethereum].ETH,
+        balance,
+      );
     },
     TIMEOUT,
   );
 
-  it('ETH->UNI', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.UNI, 0.1), TIMEOUT);
+  it(
+    'ETH->UNI',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].UNI, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'UNI->ETH',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.UNI.address);
-      await checkAndSwap(ChainID, TOKENS.UNI, TOKENS.ETH, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].UNI.address);
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].UNI, TOKENS[CHAINS.Ethereum].ETH, balance);
     },
     TIMEOUT,
   );
 
-  it('ETH->USDT', async () => await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.USDT, 0.1), TIMEOUT);
+  it(
+    'ETH->USDT',
+    async () =>
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].USDT, 0.1),
+    TIMEOUT,
+  );
 
   it(
     'USDT->LINK',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.USDT.address);
-      await checkAndSwap(ChainID, TOKENS.USDT, TOKENS.LINK, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].USDT.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].USDT,
+        TOKENS[CHAINS.Ethereum].LINK,
+        balance,
+      );
     },
     TIMEOUT,
   );
@@ -206,8 +256,13 @@ describe('swap', () => {
   it(
     'LINK->DAI',
     async () => {
-      const balance = await account.getBalance(ChainID, TOKENS.LINK.address);
-      await checkAndSwap(ChainID, TOKENS.LINK, TOKENS.DAI, balance);
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].LINK.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].LINK,
+        TOKENS[CHAINS.Ethereum].DAI,
+        balance,
+      );
     },
     TIMEOUT,
   );
@@ -215,7 +270,7 @@ describe('swap', () => {
   it(
     'Should skip swap for small amounts',
     async () => {
-      await checkAndSwap(ChainID, TOKENS.ETH, TOKENS.USDC, 0.0005);
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].USDC, 0.0005);
     },
     TIMEOUT,
   );
