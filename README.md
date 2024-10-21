@@ -108,7 +108,7 @@ The SDK offers several utility functions for managing conversions and amounts:
 - `amountToBigInt(amount: number, decimal: number): ProtoBigInt`
 
 ## Sending a conventional userOp
-The BalloonDogs network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard useOps.
+The BalloonDogs network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
 ```typescript
 await intentBuilder.executeStandardUserOps(account, ChainID, {
   calldata: '0x', // optional
