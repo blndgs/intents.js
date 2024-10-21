@@ -1,9 +1,9 @@
 import { ethers } from 'ethers';
 import {
   amountToBigInt,
-  computeMessageHash,
+  computeCrossChainUserOpHash,
   computeUserOpHash,
-  generateSignature,
+  sign,
   toBigInt,
   verifySignature,
 } from '../src/utils';
@@ -66,7 +66,7 @@ describe('computeMessageHash', () => {
 
     const chainIds = [1, 56];
 
-    const hash = computeMessageHash(chainIds, [mockBuilder1, mockBuilder2]);
+    const hash = computeCrossChainUserOpHash(chainIds, [mockBuilder1, mockBuilder2]);
     const expectedHash = '0xd9838e154a554803476cd7fdc53c9837e3e43e466cc13ae55848885901ab4150';
     expect(hash).toEqual(expectedHash);
   });
@@ -75,7 +75,9 @@ describe('computeMessageHash', () => {
     const mockBuilder = {} as UserOperationBuilder;
     const chainIds = [1, 2];
 
-    expect(() => computeMessageHash(chainIds, [mockBuilder])).toThrow('Number of chainIDs and userOps must match');
+    expect(() => computeCrossChainUserOpHash(chainIds, [mockBuilder])).toThrow(
+      'Number of chainIDs and userOps must match',
+    );
   });
 });
 
@@ -154,10 +156,10 @@ describe('Cross-Chain ECDSA Signature', () => {
     const actualSignerAddress = await account.signer.getAddress();
     console.log('Actual Signer Address:', actualSignerAddress);
 
-    const messageHash = computeMessageHash(chainIDs, userOps);
+    const messageHash = computeCrossChainUserOpHash(chainIDs, userOps);
     console.log('Message Hash:', messageHash);
 
-    const signature = await generateSignature(messageHash, account);
+    const signature = await sign(messageHash, account);
     console.log('Generated Signature:', signature);
 
     const isValid = await verifySignature(messageHash, signature, account);
@@ -172,7 +174,7 @@ describe('Cross-Chain ECDSA Signature', () => {
 
     const simpleMessage = 'Hello, World!';
     const simpleMessageHash = ethers.keccak256(ethers.toUtf8Bytes(simpleMessage));
-    const simpleSignature = await generateSignature(simpleMessageHash, account);
+    const simpleSignature = await sign(simpleMessageHash, account);
     const simpleRecoveredAddress = ethers.verifyMessage(ethers.getBytes(simpleMessageHash), simpleSignature);
 
     console.log('Simple Message:', simpleMessage);

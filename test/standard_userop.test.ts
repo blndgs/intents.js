@@ -48,7 +48,7 @@ describe('Conventional userops ethereum', () => {
         TOKENS[CHAINS.Ethereum].ETH.address,
       );
 
-      await intentBuilder.executeStandardUserOps(account, TENDERLY_CHAIN_ID.Ethereum, {
+      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.Ethereum, account, {
         callGasLimit: CALL_GAS_LIMIT,
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
@@ -86,7 +86,7 @@ describe('Conventional userops binance', () => {
         TOKENS[CHAINS.BNBChain].BNB.address,
       );
 
-      await intentBuilder.executeStandardUserOps(account, TENDERLY_CHAIN_ID.BNBChain, {
+      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.BNBChain, account, {
         callGasLimit: CALL_GAS_LIMIT,
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,

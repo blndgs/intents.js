@@ -125,7 +125,7 @@ export function amountToBigInt(amount: number, decimal: number): ProtoBigInt {
  * @param {Object} opts - Options for configuring the UserOperation.
  * @returns {Promise<UserOperationBuilder>} A promise that resolves to a UserOperationBuilder object.
  */
-export async function buildUserOp(
+export async function userOpBuilder(
   chainId: number,
   account: Account,
   opts: {
@@ -196,20 +196,12 @@ export function computeUserOpHash(chainId: number, builder: UserOperationBuilder
  * @returns {string} The computed combined message hash.
  * @throws {Error} If the number of chainIDs doesn't match the number of builders.
  */
-export function computeMessageHash(chainIDs: number[], builders: UserOperationBuilder[]): string {
+export function computeCrossChainUserOpHash(chainIDs: number[], builders: UserOperationBuilder[]): string {
   if (chainIDs.length !== builders.length) {
     throw new Error('Number of chainIDs and userOps must match');
   }
-
   const hashes = builders.map((builder, i) => computeUserOpHash(chainIDs[i], builder));
-
-  // Sort hashes numerically (based on their BigInt values)
-  const sortedHashes = hashes.sort((a, b) => {
-    const bigIntA = BigInt(a);
-    const bigIntB = BigInt(b);
-    return bigIntA < bigIntB ? -1 : bigIntA > bigIntB ? 1 : 0;
-  });
-
+  const sortedHashes = hashes.sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
   const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
   return ethers.keccak256(concatenatedHashes);
 }
@@ -221,7 +213,7 @@ export function computeMessageHash(chainIDs: number[], builders: UserOperationBu
  * @param {Account} account - The account object containing the signer.
  * @returns {Promise<string>} A promise that resolves to the generated signature.
  */
-export async function generateSignature(messageHash: string, account: Account): Promise<string> {
+export async function sign(messageHash: string, account: Account): Promise<string> {
   const messageHashBytes = ethers.getBytes(messageHash);
   const signature = await account.signer.signMessage(messageHashBytes);
   return signature;
