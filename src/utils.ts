@@ -202,8 +202,16 @@ export function computeMessageHash(chainIDs: number[], builders: UserOperationBu
   }
 
   const hashes = builders.map((builder, i) => computeUserOpHash(chainIDs[i], builder));
-  const sortedHashes = hashes.sort();
-  return ethers.keccak256('0x' + sortedHashes.map(h => h.slice(2)).join(''));
+
+  // Sort hashes numerically (based on their BigInt values)
+  const sortedHashes = hashes.sort((a, b) => {
+    const bigIntA = BigInt(a);
+    const bigIntB = BigInt(b);
+    return bigIntA < bigIntB ? -1 : bigIntA > bigIntB ? 1 : 0;
+  });
+
+  const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
+  return ethers.keccak256(concatenatedHashes);
 }
 
 /**
@@ -214,8 +222,9 @@ export function computeMessageHash(chainIDs: number[], builders: UserOperationBu
  * @returns {Promise<string>} A promise that resolves to the generated signature.
  */
 export async function generateSignature(messageHash: string, account: Account): Promise<string> {
-  const xChainHashBytes = ethers.getBytes(messageHash);
-  return await account.signer.signMessage(xChainHashBytes);
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const signature = await account.signer.signMessage(messageHashBytes);
+  return signature;
 }
 
 /**
@@ -227,8 +236,8 @@ export async function generateSignature(messageHash: string, account: Account): 
  * @returns {Promise<boolean>} A promise that resolves to true if the signature is valid, false otherwise.
  */
 export async function verifySignature(messageHash: string, signature: string, account: Account): Promise<boolean> {
-  const xChainHashBytes = ethers.getBytes(messageHash);
-  const recoveredAddress = ethers.verifyMessage(xChainHashBytes, signature);
-  const signerAddress = await account.signer.getAddress();
-  return ethers.getAddress(recoveredAddress) === ethers.getAddress(signerAddress);
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const recoveredAddress = ethers.verifyMessage(messageHashBytes, signature);
+  const expectedAddress = await account.signer.getAddress();
+  return recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
 }

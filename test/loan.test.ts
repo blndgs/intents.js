@@ -1,6 +1,6 @@
 import { Asset, Loan, CHAINS, IntentBuilder, PROJECTS, toBigInt, Account, amountToBigInt } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { initTest } from './testUtils';
+import { initSigner, initTest } from './testUtils';
 
 describe('Loan', () => {
   let intentBuilder: IntentBuilder, account: Account;
@@ -50,7 +50,8 @@ describe('Loan', () => {
   };
 
   beforeAll(async () => {
-    ({ account, intentBuilder } = await initTest());
+    const chainConfigs = await initTest();
+    ({ account, intentBuilder } = await initSigner(chainConfigs));
     await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
   // AAVE
