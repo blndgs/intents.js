@@ -306,7 +306,7 @@ describe('Cross-Chain ECDSA Signature', () => {
       maxFeePerGas: '20000000000',
     });
 
-    const destUserOp = await await buildUserOp(destChainID, account, {
+    const destUserOp = await buildUserOp(destChainID, account, {
       calldata: ethers.toUtf8Bytes(
         JSON.stringify(new Intent({ from: { case: 'fromAsset', value: from }, to: { case: 'toAsset', value: to } })),
       ),
