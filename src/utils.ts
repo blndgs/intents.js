@@ -1,5 +1,8 @@
 import { BigInt as ProtoBigInt } from 'blndgs-model';
-import { ethers } from 'ethers';
+import { BytesLike, ethers } from 'ethers';
+import { UserOperationBuilder } from 'userop';
+import { ENTRY_POINT } from './constants';
+import { Account } from './Account';
 
 /**
  * Converts a number or bigint into a ProtoBigInt, suitable for serialization and transport in network requests.
@@ -112,18 +115,118 @@ export function amountToBigInt(amount: number, decimal: number): ProtoBigInt {
   return toBigInt(floatToToken(amount, decimal));
 }
 
-// // normalizeChainId normalize the chain ID
-// // important: not in use but need it in future
-// export function normalizeChainId(chainId: ProtoBigInt | bigint | number): number {
-//   if (typeof chainId === 'number') {
-//     return chainId;
-//   }
-//   if (typeof chainId === 'bigint') {
-//     return Number(chainId);
-//   }
-//   if ('value' in chainId && chainId.value instanceof Uint8Array) {
-//     // Convert Uint8Array to number
-//     return parseInt(Buffer.from(chainId.value).toString('hex'), 16);
-//   }
-//   throw new Error('Unsupported chainId format');
-// }
+/**
+ *  builds a UserOperation using the provided parameters and a UserOperationBuilder.
+ *
+ * @async
+ * @function
+ * @param {number} chainId - The ID of the blockchain network (chain)
+ * @param {Account} account - The account object.
+ * @param {Object} opts - Options for configuring the UserOperation.
+ * @returns {Promise<UserOperationBuilder>} A promise that resolves to a UserOperationBuilder object.
+ */
+export async function userOpBuilder(
+  chainId: number,
+  account: Account,
+  opts: {
+    calldata: BytesLike;
+    preVerificationGas: string;
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+    verificationGasLimit: string;
+    callGasLimit: string;
+  },
+): Promise<UserOperationBuilder> {
+  const sender = account.getSender(chainId);
+  const nonce = await account.getNonce(chainId, sender);
+  const initCode = await account.getInitCode(chainId, nonce);
+
+  return new UserOperationBuilder()
+    .useDefaults({ sender })
+    .setCallData(opts.calldata)
+    .setPreVerificationGas(opts.preVerificationGas)
+    .setMaxFeePerGas(opts.maxFeePerGas)
+    .setMaxPriorityFeePerGas(opts.maxPriorityFeePerGas)
+    .setVerificationGasLimit(opts.verificationGasLimit)
+    .setCallGasLimit(opts.callGasLimit)
+    .setNonce(nonce)
+    .setInitCode(initCode);
+}
+
+/**
+ * Computes the hash for a UserOperation created by UserOperationBuilder.
+ *
+ * @param {number} chainId - The ID of the blockchain network.
+ * @param {UserOperationBuilder} builder - The UserOperationBuilder instance containing the UserOperation details.
+ * @returns {string} The computed hash of the UserOperation.
+ */
+export function hashUserOp(chainId: number, builder: UserOperationBuilder): string {
+  const userOp = builder.getOp();
+  const packedData = ethers.AbiCoder.defaultAbiCoder().encode(
+    ['address', 'uint256', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+    [
+      userOp.sender,
+      userOp.nonce.toString(),
+      ethers.keccak256(userOp.initCode as BytesLike),
+      ethers.keccak256(userOp.callData as BytesLike),
+      userOp.callGasLimit.toString(),
+      userOp.verificationGasLimit.toString(),
+      userOp.preVerificationGas.toString(),
+      userOp.maxFeePerGas.toString(),
+      userOp.maxPriorityFeePerGas.toString(),
+      ethers.keccak256(userOp.paymasterAndData as BytesLike),
+    ],
+  );
+
+  const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+    ['bytes32', 'address', 'uint256'],
+    [ethers.keccak256(packedData), ENTRY_POINT, chainId],
+  );
+
+  return ethers.keccak256(encoded);
+}
+
+/**
+ * Computes the combined message hash (xChainHash) for cross-chain signing.
+ *
+ * @param {number[]} chainIDs - An array of chain IDs involved in the cross-chain operation.
+ * @param {UserOperationBuilder[]} builders - An array of UserOperationBuilder instances, one for each chain.
+ * @returns {string} The computed combined message hash.
+ * @throws {Error} If the number of chainIDs doesn't match the number of builders.
+ */
+export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperationBuilder[]): string {
+  if (chainIDs.length !== builders.length) {
+    throw new Error('Number of chainIDs and userOps must match');
+  }
+  const hashes = builders.map((builder, i) => hashUserOp(chainIDs[i], builder));
+  const sortedHashes = hashes.sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
+  const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
+  return ethers.keccak256(concatenatedHashes);
+}
+
+/**
+ * Generates the signature for the given message hash using the signer's private key.
+ *
+ * @param {string} messageHash - The hash of the message to be signed.
+ * @param {Account} account - The account object containing the signer.
+ * @returns {Promise<string>} A promise that resolves to the generated signature.
+ */
+export async function sign(messageHash: string, account: Account): Promise<string> {
+  const messageHashBytes = ethers.getBytes(messageHash);
+  return await account.signer.signMessage(messageHashBytes);
+}
+
+/**
+ * Verifies the signature against the message hash and signer's address.
+ *
+ * @param {string} messageHash - The hash of the original message.
+ * @param {string} signature - The signature to verify.
+ * @param {Account} account - The account object containing the signer.
+ * @returns {Promise<boolean>} A promise that resolves to true if the signature is valid, false otherwise.
+ */
+export async function verifySignature(messageHash: string, signature: string, account: Account): Promise<boolean> {
+  const messageHashBytes = ethers.getBytes(messageHash);
+  const recoveredAddress = ethers.verifyMessage(messageHashBytes, signature);
+  const expectedAddress = await account.signer.getAddress();
+  return recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
+}

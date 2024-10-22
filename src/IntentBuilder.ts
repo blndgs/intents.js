@@ -2,12 +2,12 @@ import { BytesLike, ethers } from 'ethers';
 import { ChainConfig, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
 import {
   CALL_GAS_LIMIT,
-  ENTRY_POINT,
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
   PRE_VERIFICATION_GAS,
   VERIFICATION_GAS_LIMIT,
 } from './constants';
+import { hashUserOp, hashCrossChainUserOp, sign, userOpBuilder, verifySignature } from './utils';
 import { Client, UserOperationBuilder } from 'userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
@@ -20,6 +20,8 @@ import { Account } from './Account';
 export class IntentBuilder {
   /**
    * Private constructor to enforce the use of the factory method for creating instances.
+   * @param _clients Map of chain IDs to their corresponding Client instances.
+   * @param _chainConfigs Map of chain IDs to their corresponding ChainConfig objects.
    */
   private constructor(
     private _clients: Map<number, Client>,
@@ -49,19 +51,20 @@ export class IntentBuilder {
    * @param from The initial state of the transaction.
    * @param to The final state after the transaction.
    * @param account The user account performing the transaction.
-   * @param chainId the custom chain id for the transaction.
+   * @param sourceChainId The source chain ID for the transaction.
+   * @param destChainId Optional destination chain ID for cross-chain transactions.
+   * @returns A promise that resolves to the transaction execution response(s).
    * (important: though chainId is not required field which will be removed in future, we need it because our test network using custom chain IDs)
-   * @returns A promise that resolves when the transaction has been executed.
    */
-  async execute(from: State, to: State, account: Account, chainId: number): Promise<UserOpExecutionResponse> {
-    // TODO:: will be remove in future
-    if (chainId === undefined || chainId === 0) {
-      throw new Error('chainId is null or zero');
-    }
-    // Ensure the chain IDs match for multi chain
-    // TODO:: it will be revised for the cross chain integration
-    if (!from.chainId?.equals(to.chainId)) {
-      throw new Error('Chain IDs do not match');
+  async execute(
+    from: State,
+    to: State,
+    account: Account,
+    sourceChainId: number,
+    destChainId?: number,
+  ): Promise<UserOpExecutionResponse> {
+    if (sourceChainId === undefined || sourceChainId === 0) {
+      throw new Error('sourceChainId is null or zero');
     }
 
     const intents = new Intent({
@@ -69,14 +72,78 @@ export class IntentBuilder {
       to: this.setTo(to),
     });
 
-    return await this._innerExecute(account, chainId, {
-      calldata: ethers.toUtf8Bytes(JSON.stringify(intents)),
-      maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
-      verificationGasLimit: VERIFICATION_GAS_LIMIT,
-      callGasLimit: CALL_GAS_LIMIT,
-      preVerificationGas: PRE_VERIFICATION_GAS,
-      maxFeePerGas: MAX_FEE_PER_GAS,
-    });
+    const calldata = ethers.toUtf8Bytes(JSON.stringify(intents));
+
+    if (destChainId && destChainId !== sourceChainId) {
+      return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
+    } else {
+      return this.executeSingleChain(sourceChainId, account, calldata);
+    }
+  }
+
+  /**
+   * Executes a single-chain transaction.
+   * @param account The user account performing the transaction.
+   * @param chainId The chain ID for the transaction.
+   * @param calldata The calldata for the transaction.
+   * @param opts Optional UserOperation options.
+   * @returns A promise that resolves to the transaction execution response.
+   */
+  private async executeSingleChain(
+    chainId: number,
+    account: Account,
+    calldata: BytesLike,
+    opts?: Partial<UserOpOptions>,
+  ): Promise<UserOpExecutionResponse> {
+    const client = this.getClient(chainId);
+    const builder = await this.createUserOpBuilder(chainId, account, calldata, opts);
+    const userOpHash = hashUserOp(chainId, builder);
+    const signature = await sign(userOpHash, account);
+    builder.setSignature(signature);
+
+    const res = await client.sendUserOperation(builder);
+
+    if (!isUserOpExecutionResponse(res)) {
+      throw new Error(`Unexpected response from Bundler`);
+    }
+
+    return res;
+  }
+
+  /**
+   * Executes a cross-chain transaction.
+   * @param account The user account performing the transaction.
+   * @param sourceChainId The source chain ID for the transaction.
+   * @param destChainId The destination chain ID for the transaction.
+   * @param calldata The calldata for the transaction.
+   * @returns A promise that resolves to an array of transaction execution responses.
+   */
+  private async executeCrossChain(
+    sourceChainId: number,
+    destChainId: number,
+    account: Account,
+    calldata: BytesLike,
+  ): Promise<UserOpExecutionResponse> {
+    const chainIDs = [sourceChainId, destChainId];
+    const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
+    const destBuilder = new UserOperationBuilder().useDefaults(sourceBuilder.getOp());
+    const builders = [sourceBuilder, destBuilder];
+
+    const userOpHash = hashCrossChainUserOp(chainIDs, builders);
+    const signature = await sign(userOpHash, account);
+
+    const isValid = await verifySignature(userOpHash, signature, account);
+    if (!isValid) {
+      throw new Error('Cross-chain signature is invalid');
+    }
+    builders.forEach(builder => builder.setSignature(signature));
+    const client = this.getClient(sourceChainId);
+    // tx to be send on source chain only.
+    const res = await client.sendUserOperation(sourceBuilder);
+    if (!isUserOpExecutionResponse(res)) {
+      throw new Error(`Unexpected response from Bundler`);
+    }
+    return res;
   }
 
   /**
@@ -88,67 +155,28 @@ export class IntentBuilder {
    * @returns A promise that resolves when the transaction has been executed.
    */
   async executeStandardUserOps(
-    account: Account,
     chainId: number,
+    account: Account,
     opts: UserOpOptions,
   ): Promise<UserOpExecutionResponse> {
-    return await this._innerExecute(account, chainId, {
-      calldata: opts.calldata ?? '0x',
+    return this.executeSingleChain(chainId, account, opts.calldata ?? '0x', {
       maxFeePerGas: opts.maxFeePerGas,
-      preVerificationGas: PRE_VERIFICATION_GAS,
       callGasLimit: opts.callGasLimit,
       verificationGasLimit: opts.verificationGasLimit ?? VERIFICATION_GAS_LIMIT,
       maxPriorityFeePerGas: opts.maxPriorityFeePerGas,
     });
   }
 
-  private async _innerExecute(
-    account: Account,
-    chainId: number,
-    opts: {
-      calldata: BytesLike;
-      preVerificationGas: string;
-      maxFeePerGas: string;
-      maxPriorityFeePerGas: string;
-      verificationGasLimit: string;
-      callGasLimit: string;
-    },
-  ): Promise<UserOpExecutionResponse> {
+  /**
+   * Retrieves the Client instance for a given chain ID.
+   * @param chainId The chain ID to get the Client for.
+   * @returns The Client instance for the specified chain ID.
+   * @throws Error if the Client for the specified chain ID is not found.
+   */
+  private getClient(chainId: number): Client {
     const client = this._clients.get(chainId);
-    if (!client) {
-      throw new Error(`Client for chain ID ${chainId} not found`);
-    }
-
-    const chainConfig = this._chainConfigs.get(chainId);
-    if (!chainConfig) {
-      throw new Error(`Configuration for chain ID ${chainId} not found`);
-    }
-
-    const sender = account.getSender(chainId);
-    const nonce = await account.getNonce(chainId, sender);
-    const initCode = await account.getInitCode(chainId, nonce);
-
-    const builder = new UserOperationBuilder()
-      .useDefaults({ sender })
-      .setCallData(opts.calldata)
-      .setPreVerificationGas(opts.preVerificationGas)
-      .setMaxFeePerGas(opts.maxFeePerGas)
-      .setMaxPriorityFeePerGas(opts.maxPriorityFeePerGas)
-      .setVerificationGasLimit(opts.verificationGasLimit)
-      .setCallGasLimit(opts.callGasLimit)
-      .setNonce(nonce)
-      .setInitCode(initCode);
-
-    const signature = await this.sign(chainId, account, builder);
-    builder.setSignature(signature);
-
-    const res = await client.sendUserOperation(builder);
-
-    if (!isUserOpExecutionResponse(res)) {
-      throw new Error(`Unexpected response from Bundler`);
-    }
-
-    return res;
+    if (!client) throw new Error(`Client for chain ID ${chainId} not found`);
+    return client;
   }
 
   /**
@@ -171,16 +199,10 @@ export class IntentBuilder {
    * @returns The determined source state.
    */
   private setFrom(state: State): FromState {
-    switch (true) {
-      case state instanceof Asset:
-        return { case: 'fromAsset', value: state };
-      case state instanceof Loan:
-        return { case: 'fromLoan', value: state };
-      case state instanceof Stake:
-        return { case: 'fromStake', value: state };
-      default:
-        return { case: undefined };
-    }
+    if (state instanceof Asset) return { case: 'fromAsset', value: state };
+    if (state instanceof Loan) return { case: 'fromLoan', value: state };
+    if (state instanceof Stake) return { case: 'fromStake', value: state };
+    return { case: undefined };
   }
 
   /**
@@ -189,50 +211,34 @@ export class IntentBuilder {
    * @returns The determined target state.
    */
   private setTo(state: State): ToState {
-    switch (true) {
-      case state instanceof Asset:
-        return { case: 'toAsset', value: state };
-      case state instanceof Stake:
-        return { case: 'toStake', value: state };
-      case state instanceof Loan:
-        return { case: 'toLoan', value: state };
-      default:
-        return { case: undefined };
-    }
+    if (state instanceof Asset) return { case: 'toAsset', value: state };
+    if (state instanceof Stake) return { case: 'toStake', value: state };
+    if (state instanceof Loan) return { case: 'toLoan', value: state };
+    return { case: undefined };
   }
 
   /**
-   * Signs a transaction using the account details and transaction builder.
-   * @param chainId The chain ID where the signature is applicable.
-   * @param account The account performing the signing.
-   * @param builder The UserOperationBuilder containing transaction details.
-   * @returns The signature as a string.
+   * Creates a UserOperationBuilder instance with the specified parameters.
+   * @param chainId The chain ID for the UserOperation.
+   * @param account The user account associated with the UserOperation.
+   * @param calldata The calldata for the UserOperation.
+   * @param opts Optional UserOperation options.
+   * @returns A promise that resolves to a UserOperationBuilder instance.
    */
-  private async sign(chainId: number, account: Account, builder: UserOperationBuilder) {
-    const userOp = builder.getOp();
-    const packedData = ethers.AbiCoder.defaultAbiCoder().encode(
-      ['address', 'uint256', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
-      [
-        userOp.sender,
-        userOp.nonce.toString(),
-        ethers.keccak256(userOp.initCode as BytesLike),
-        ethers.keccak256(userOp.callData as BytesLike),
-        userOp.callGasLimit.toString(),
-        userOp.verificationGasLimit.toString(),
-        userOp.preVerificationGas.toString(),
-        userOp.maxFeePerGas.toString(),
-        userOp.maxPriorityFeePerGas.toString(),
-        ethers.keccak256(userOp.paymasterAndData as BytesLike),
-      ],
-    );
-
-    const enc = ethers.AbiCoder.defaultAbiCoder().encode(
-      ['bytes32', 'address', 'uint256'],
-      [ethers.keccak256(packedData), ENTRY_POINT, chainId],
-    );
-
-    const userOpHash = ethers.keccak256(enc);
-    return await account.signer.signMessage(ethers.getBytes(userOpHash));
+  private async createUserOpBuilder(
+    chainId: number,
+    account: Account,
+    calldata: BytesLike,
+    opts?: Partial<UserOpOptions>,
+  ): Promise<UserOperationBuilder> {
+    return userOpBuilder(chainId, account, {
+      calldata,
+      maxPriorityFeePerGas: opts?.maxPriorityFeePerGas ?? MAX_PRIORITY_FEE_PER_GAS,
+      verificationGasLimit: opts?.verificationGasLimit ?? VERIFICATION_GAS_LIMIT,
+      callGasLimit: opts?.callGasLimit ?? CALL_GAS_LIMIT,
+      preVerificationGas: PRE_VERIFICATION_GAS,
+      maxFeePerGas: opts?.maxFeePerGas ?? MAX_FEE_PER_GAS,
+    });
   }
 
   /**
