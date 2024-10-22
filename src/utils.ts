@@ -141,7 +141,7 @@ export async function userOpBuilder(
   const nonce = await account.getNonce(chainId, sender);
   const initCode = await account.getInitCode(chainId, nonce);
 
-  const builder = new UserOperationBuilder()
+  return new UserOperationBuilder()
     .useDefaults({ sender })
     .setCallData(opts.calldata)
     .setPreVerificationGas(opts.preVerificationGas)
@@ -151,8 +151,6 @@ export async function userOpBuilder(
     .setCallGasLimit(opts.callGasLimit)
     .setNonce(nonce)
     .setInitCode(initCode);
-
-  return builder;
 }
 
 /**
@@ -162,7 +160,7 @@ export async function userOpBuilder(
  * @param {UserOperationBuilder} builder - The UserOperationBuilder instance containing the UserOperation details.
  * @returns {string} The computed hash of the UserOperation.
  */
-export function computeUserOpHash(chainId: number, builder: UserOperationBuilder): string {
+export function hashUserOp(chainId: number, builder: UserOperationBuilder): string {
   const userOp = builder.getOp();
   const packedData = ethers.AbiCoder.defaultAbiCoder().encode(
     ['address', 'uint256', 'bytes32', 'bytes32', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
@@ -196,11 +194,11 @@ export function computeUserOpHash(chainId: number, builder: UserOperationBuilder
  * @returns {string} The computed combined message hash.
  * @throws {Error} If the number of chainIDs doesn't match the number of builders.
  */
-export function computeCrossChainUserOpHash(chainIDs: number[], builders: UserOperationBuilder[]): string {
+export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperationBuilder[]): string {
   if (chainIDs.length !== builders.length) {
     throw new Error('Number of chainIDs and userOps must match');
   }
-  const hashes = builders.map((builder, i) => computeUserOpHash(chainIDs[i], builder));
+  const hashes = builders.map((builder, i) => hashUserOp(chainIDs[i], builder));
   const sortedHashes = hashes.sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
   const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
   return ethers.keccak256(concatenatedHashes);
@@ -215,8 +213,7 @@ export function computeCrossChainUserOpHash(chainIDs: number[], builders: UserOp
  */
 export async function sign(messageHash: string, account: Account): Promise<string> {
   const messageHashBytes = ethers.getBytes(messageHash);
-  const signature = await account.signer.signMessage(messageHashBytes);
-  return signature;
+  return await account.signer.signMessage(messageHashBytes);
 }
 
 /**

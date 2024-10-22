@@ -1,14 +1,7 @@
 import { ethers } from 'ethers';
-import {
-  amountToBigInt,
-  computeCrossChainUserOpHash,
-  computeUserOpHash,
-  sign,
-  toBigInt,
-  verifySignature,
-} from '../src/utils';
+import { amountToBigInt, hashCrossChainUserOp, hashUserOp, sign, toBigInt, verifySignature } from '../src';
 import { UserOperationBuilder } from 'userop';
-import { Account } from '../src/Account';
+import { Account } from '../src';
 import { Asset, Intent } from 'blndgs-model';
 import { initTest } from './testUtils';
 
@@ -31,7 +24,7 @@ describe('computeUserOpHash', () => {
       getOp: jest.fn().mockReturnValue(mockUserOp),
     } as unknown as UserOperationBuilder;
     const expectedHash = '0xfb65960f1001da5618a675bb640a3dcf9c2d6446c1dc2cb29dd9cd17ebdc6756';
-    const hash = computeUserOpHash(1, mockBuilder);
+    const hash = hashUserOp(1, mockBuilder);
     expect(hash).toEqual(expectedHash);
   });
 });
@@ -66,7 +59,7 @@ describe('computeMessageHash', () => {
 
     const chainIds = [1, 56];
 
-    const hash = computeCrossChainUserOpHash(chainIds, [mockBuilder1, mockBuilder2]);
+    const hash = hashCrossChainUserOp(chainIds, [mockBuilder1, mockBuilder2]);
     const expectedHash = '0xd9838e154a554803476cd7fdc53c9837e3e43e466cc13ae55848885901ab4150';
     expect(hash).toEqual(expectedHash);
   });
@@ -75,9 +68,7 @@ describe('computeMessageHash', () => {
     const mockBuilder = {} as UserOperationBuilder;
     const chainIds = [1, 2];
 
-    expect(() => computeCrossChainUserOpHash(chainIds, [mockBuilder])).toThrow(
-      'Number of chainIDs and userOps must match',
-    );
+    expect(() => hashCrossChainUserOp(chainIds, [mockBuilder])).toThrow('Number of chainIDs and userOps must match');
   });
 });
 
@@ -156,7 +147,7 @@ describe('Cross-Chain ECDSA Signature', () => {
     const actualSignerAddress = await account.signer.getAddress();
     console.log('Actual Signer Address:', actualSignerAddress);
 
-    const messageHash = computeCrossChainUserOpHash(chainIDs, userOps);
+    const messageHash = hashCrossChainUserOp(chainIDs, userOps);
     console.log('Message Hash:', messageHash);
 
     const signature = await sign(messageHash, account);

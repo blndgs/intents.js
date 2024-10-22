@@ -7,7 +7,7 @@ import {
   PRE_VERIFICATION_GAS,
   VERIFICATION_GAS_LIMIT,
 } from './constants';
-import { computeUserOpHash, computeCrossChainUserOpHash, sign, userOpBuilder, verifySignature } from './utils';
+import { hashUserOp, hashCrossChainUserOp, sign, userOpBuilder, verifySignature } from './utils';
 import { Client, UserOperationBuilder } from 'userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
@@ -97,7 +97,7 @@ export class IntentBuilder {
   ): Promise<UserOpExecutionResponse> {
     const client = this.getClient(chainId);
     const builder = await this.createUserOpBuilder(chainId, account, calldata, opts);
-    const userOpHash = computeUserOpHash(chainId, builder);
+    const userOpHash = hashUserOp(chainId, builder);
     const signature = await sign(userOpHash, account);
     builder.setSignature(signature);
 
@@ -129,10 +129,10 @@ export class IntentBuilder {
     const destBuilder = new UserOperationBuilder().useDefaults(sourceBuilder.getOp());
     const builders = [sourceBuilder, destBuilder];
 
-    const messageHash = computeCrossChainUserOpHash(chainIDs, builders);
-    const signature = await sign(messageHash, account);
+    const userOpHash = hashCrossChainUserOp(chainIDs, builders);
+    const signature = await sign(userOpHash, account);
 
-    const isValid = await verifySignature(messageHash, signature, account);
+    const isValid = await verifySignature(userOpHash, signature, account);
     if (!isValid) {
       throw new Error('Cross-chain signature is invalid');
     }
