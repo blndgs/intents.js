@@ -62,7 +62,7 @@ export class IntentBuilder {
     account: Account,
     sourceChainId: number,
     destChainId?: number,
-  ): Promise<UserOpExecutionResponse | UserOpExecutionResponse[]> {
+  ): Promise<UserOpExecutionResponse> {
     if (sourceChainId === undefined || sourceChainId === 0) {
       throw new Error('sourceChainId is null or zero');
     }
