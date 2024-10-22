@@ -123,7 +123,7 @@ export class IntentBuilder {
     destChainId: number,
     account: Account,
     calldata: BytesLike,
-  ): Promise<UserOpExecutionResponse[]> {
+  ): Promise<UserOpExecutionResponse> {
     const chainIDs = [sourceChainId, destChainId];
     const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
     const destBuilder = new UserOperationBuilder().useDefaults(sourceBuilder.getOp());
@@ -136,20 +136,14 @@ export class IntentBuilder {
     if (!isValid) {
       throw new Error('Cross-chain signature is invalid');
     }
-
     builders.forEach(builder => builder.setSignature(signature));
-
-    const responses: UserOpExecutionResponse[] = [];
-    for (let i = 0; i < builders.length; i++) {
-      const client = this.getClient(chainIDs[i]);
-      const res = await client.sendUserOperation(builders[i]);
-      if (!isUserOpExecutionResponse(res)) {
-        throw new Error(`Unexpected response from Bundler on chain ID ${chainIDs[i]}`);
-      }
-      responses.push(res);
+    const client = this.getClient(sourceChainId);
+    // tx to be send on source chain only.
+    const res = await client.sendUserOperation(sourceBuilder);
+    if (!isUserOpExecutionResponse(res)) {
+      throw new Error(`Unexpected response from Bundler`);
     }
-
-    return responses;
+    return res;
   }
 
   /**
