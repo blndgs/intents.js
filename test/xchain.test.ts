@@ -4,6 +4,7 @@ import { UserOperationBuilder } from 'userop';
 import { Account } from '../src';
 import { Asset, Intent } from 'blndgs-model';
 import { initTest } from './testUtils';
+import { TIMEOUT } from './constants';
 
 describe('computeUserOpHash', () => {
   it('should compute a valid hash for a UserOperation', () => {
@@ -73,28 +74,32 @@ describe('computeMessageHash', () => {
 });
 
 describe('Account', () => {
-  it('should correctly initialize and sign messages', async () => {
-    const privateKey = 'e8776ff1bf88707b464bda52319a747a71c41a137277161dcabb9f821d6c0bd7';
-    const wallet = new ethers.Wallet(privateKey);
-    const configs = await initTest();
-    // custom signer account for the testing
-    const account = await Account.createInstance(wallet, configs);
+  it(
+    'should correctly initialize and sign messages',
+    async () => {
+      const privateKey = 'e8776ff1bf88707b464bda52319a747a71c41a137277161dcabb9f821d6c0bd7';
+      const wallet = new ethers.Wallet(privateKey);
+      const configs = await initTest();
+      // custom signer account for the testing
+      const account = await Account.createInstance(wallet, configs);
 
-    const message = 'Hello, World!';
-    const messageBytes = ethers.toUtf8Bytes(message);
-    const messageHash = ethers.keccak256(messageBytes);
+      const message = 'Hello, World!';
+      const messageBytes = ethers.toUtf8Bytes(message);
+      const messageHash = ethers.keccak256(messageBytes);
 
-    const signature = await account.signer.signMessage(ethers.getBytes(messageHash));
-    const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
+      const signature = await account.signer.signMessage(ethers.getBytes(messageHash));
+      const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
 
-    console.log('Message:', message);
-    console.log('Message Hash:', messageHash);
-    console.log('Signature:', signature);
-    console.log('Account address:', await account.signer.getAddress());
-    console.log('Recovered address:', recoveredAddress);
+      console.log('Message:', message);
+      console.log('Message Hash:', messageHash);
+      console.log('Signature:', signature);
+      console.log('Account address:', await account.signer.getAddress());
+      console.log('Recovered address:', recoveredAddress);
 
-    expect(recoveredAddress.toLowerCase()).toBe((await account.signer.getAddress()).toLowerCase());
-  });
+      expect(recoveredAddress.toLowerCase()).toBe((await account.signer.getAddress()).toLowerCase());
+    },
+    TIMEOUT,
+  );
 });
 
 describe('Cross-Chain ECDSA Signature', () => {

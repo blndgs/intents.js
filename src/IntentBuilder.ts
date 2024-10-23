@@ -126,7 +126,7 @@ export class IntentBuilder {
   ): Promise<UserOpExecutionResponse> {
     const chainIDs = [sourceChainId, destChainId];
     const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
-    const destBuilder = new UserOperationBuilder().useDefaults(sourceBuilder.getOp());
+    const destBuilder = await this.createUserOpBuilder(destChainId, account, calldata);
     const builders = [sourceBuilder, destBuilder];
 
     const userOpHash = hashCrossChainUserOp(chainIDs, builders);
