@@ -12,7 +12,7 @@ export const ENTRY_POINT = '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789';
 export const FACTORY: Record<number, string> = {
   [CHAINS.Ethereum]: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC', // Ethereum Mainnet
   [CHAINS.BNBChain]: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC', // Binance Smart Chain
-  [CHAINS.Polygon]: '0xd9a6d24030c0DFB0bf78170556a8B671Ec432AAC', // Polygon
+  [CHAINS.Polygon]: '0x228d08c6378cf852a18fc5fc18cefbf51ade4e9f', // Polygon
 };
 
 export const PRE_VERIFICATION_GAS = '0x493E0'; // 300,000

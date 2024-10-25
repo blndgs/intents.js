@@ -18,7 +18,7 @@
     "@sinonjs/referee-sinon": "^12.0.0",
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/jest": "^29.5.13",
-    "@types/node": "^22.7.7",
+    "@types/node": "^22.7.9",
     "@typescript-eslint/typescript-estree": "^8.10.0",
     "chai": "^5.1.1",
     "eslint": "^9.13.0",
