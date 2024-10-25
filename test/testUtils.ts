@@ -23,7 +23,7 @@ export function generateRandomAccount(): ethers.Wallet {
   return new ethers.Wallet(privateKey);
 }
 
-export async function initTest() {
+export async function initTest(): Promise<ChainConfigs> {
   if (!process.env.ETH_BUNDLER_URL) throw new Error('ETH_BUNDLER_URL is missing');
   if (!process.env.ETH_NODE_URL) throw new Error('ETH_NODE_URL is missing');
   if (!process.env.ETH_CHAIN_ID) throw new Error('ETH_CHAIN_ID is missing');
@@ -52,10 +52,12 @@ export async function initTest() {
       factory: '0xd9a6d24030c0DFB0bf78170556a8B671Ec432AAC',
     },
   };
+  return chainConfigs;
+}
 
+export async function initSigner(chainConfigs: ChainConfigs) {
   const signer = generateRandomAccount();
   await initializeMoralis();
-
   return {
     intentBuilder: await IntentBuilder.createInstance(chainConfigs),
     account: await Account.createInstance(signer, chainConfigs),

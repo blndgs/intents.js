@@ -1,7 +1,7 @@
 import fetch from 'isomorphic-fetch';
 import { IntentBuilder, Account, CHAINS } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, TOKENS } from './constants';
-import { initTest } from './testUtils';
+import { initSigner, initTest } from './testUtils';
 import { CALL_GAS_LIMIT, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS, VERIFICATION_GAS_LIMIT } from '../src/constants';
 
 async function fundUserWallet(token: string, addr: string, rpcURL: string): Promise<void> {
@@ -29,7 +29,8 @@ describe('Conventional userops ethereum', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
   beforeAll(async () => {
-    ({ account, intentBuilder } = await initTest());
+    const chainConfigs = await initTest();
+    ({ account, intentBuilder } = await initSigner(chainConfigs));
     await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
 
     await fundUserWallet(
@@ -47,7 +48,7 @@ describe('Conventional userops ethereum', () => {
         TOKENS[CHAINS.Ethereum].ETH.address,
       );
 
-      await intentBuilder.executeStandardUserOps(account, TENDERLY_CHAIN_ID.Ethereum, {
+      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.Ethereum, account, {
         callGasLimit: CALL_GAS_LIMIT,
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
@@ -66,7 +67,8 @@ describe('Conventional userops binance', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
   beforeAll(async () => {
-    ({ account, intentBuilder } = await initTest());
+    const chainConfigs = await initTest();
+    ({ account, intentBuilder } = await initSigner(chainConfigs));
     await account.faucet(TENDERLY_CHAIN_ID.BNBChain, 1);
 
     await fundUserWallet(
@@ -84,7 +86,7 @@ describe('Conventional userops binance', () => {
         TOKENS[CHAINS.BNBChain].BNB.address,
       );
 
-      await intentBuilder.executeStandardUserOps(account, TENDERLY_CHAIN_ID.BNBChain, {
+      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.BNBChain, account, {
         callGasLimit: CALL_GAS_LIMIT,
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,

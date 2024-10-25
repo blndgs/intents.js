@@ -1,9 +1,11 @@
+import { CHAINS } from '../src';
+
 export type Token = { address: string; decimal: number };
 export type ChainTokens = { [tokenSymbol: string]: Token };
 
 export const TOKENS: Record<number, ChainTokens> = {
   // Ethereum Mainnet (Chain ID: 1)
-  1: {
+  [CHAINS.Ethereum]: {
     ETH: { address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimal: 18 },
     USDT: { address: '0xdac17f958d2ee523a2206206994597c13d831ec7', decimal: 6 },
     DAI: { address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', decimal: 18 },
@@ -23,7 +25,7 @@ export const TOKENS: Record<number, ChainTokens> = {
   },
 
   // Binance Smart Chain (Chain ID: 56)
-  56: {
+  [CHAINS.BNBChain]: {
     BNB: { address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimal: 18 },
     WBNB: { address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', decimal: 18 },
     USDT: { address: '0x55d398326f99059fF775485246999027B3197955', decimal: 18 },
@@ -32,7 +34,7 @@ export const TOKENS: Record<number, ChainTokens> = {
   },
 
   // Polygon (Chain ID: 137)
-  137: {
+  [CHAINS.Polygon]: {
     POL: { address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimal: 18 },
     WPOL: { address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', decimal: 18 },
     USDT: { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimal: 6 },

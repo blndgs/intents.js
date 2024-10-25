@@ -1,13 +1,14 @@
 import { IntentBuilder, CHAINS, PROJECTS, toBigInt, Asset, Stake, Account, amountToBigInt } from '../src';
 
 import { TENDERLY_CHAIN_ID, TIMEOUT, TOKENS } from './constants';
-import { initTest } from './testUtils';
+import { initSigner, initTest } from './testUtils';
 
 describe('Stake', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
   beforeAll(async () => {
-    ({ account, intentBuilder } = await initTest());
+    const chainConfigs = await initTest();
+    ({ account, intentBuilder } = await initSigner(chainConfigs));
     await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
 

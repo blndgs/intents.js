@@ -1,6 +1,6 @@
 import { IntentBuilder, CHAINS, toBigInt, Asset, Account, floatToToken, weiToFloat, amountToBigInt } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { getPrice, initTest } from './testUtils';
+import { getPrice, initSigner, initTest } from './testUtils';
 
 /** Maximum allowed slippage for swaps (2%) */
 const DEFAULT_SLIPPAGE = 0.02;
@@ -133,7 +133,8 @@ describe('swap', () => {
 
   // Initialize test environment
   beforeAll(async () => {
-    ({ account, intentBuilder } = await initTest());
+    const chainConfigs = await initTest();
+    ({ account, intentBuilder } = await initSigner(chainConfigs));
     await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
 
