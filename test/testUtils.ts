@@ -49,7 +49,7 @@ export async function initTest(): Promise<ChainConfigs> {
     [Number(process.env.POL_CHAIN_ID)]: {
       rpcUrl: process.env.POL_NODE_URL,
       bundlerUrl: process.env.POL_BUNDLER_URL,
-      factory: '0xd9a6d24030c0DFB0bf78170556a8B671Ec432AAC',
+      factory: '0xb16c1ce2efee29d6b314163293743d2c6306deb6',
     },
   };
   return chainConfigs;

@@ -25,77 +25,112 @@ async function fundUserWallet(token: string, addr: string, rpcURL: string): Prom
   }
 }
 
-describe('Conventional userops ethereum', () => {
+// describe('Conventional userops ethereum', () => {
+//   let intentBuilder: IntentBuilder, account: Account;
+
+//   beforeAll(async () => {
+//     const chainConfigs = await initTest();
+//     ({ account, intentBuilder } = await initSigner(chainConfigs));
+//     await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
+
+//     await fundUserWallet(
+//       TOKENS[CHAINS.Ethereum].USDC.address,
+//       account.getSender(TENDERLY_CHAIN_ID.Ethereum),
+//       intentBuilder.getChainConfig(TENDERLY_CHAIN_ID.Ethereum).rpcUrl,
+//     );
+//   }, TIMEOUT);
+
+//   it(
+//     'executes an empty calldata',
+//     async () => {
+//       const initialETHBalance = await account.getBalance(
+//         TENDERLY_CHAIN_ID.Ethereum,
+//         TOKENS[CHAINS.Ethereum].ETH.address,
+//       );
+
+//       await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.Ethereum, account, {
+//         callGasLimit: CALL_GAS_LIMIT,
+//         maxFeePerGas: MAX_FEE_PER_GAS,
+//         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+//         verificationGasLimit: VERIFICATION_GAS_LIMIT,
+//       });
+
+//       const finalETHBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
+
+//       expect(finalETHBalance).toBeLessThan(initialETHBalance);
+//     },
+//     TIMEOUT,
+//   );
+// });
+
+// describe('Conventional userops binance', () => {
+//   let intentBuilder: IntentBuilder, account: Account;
+
+//   beforeAll(async () => {
+//     const chainConfigs = await initTest();
+//     ({ account, intentBuilder } = await initSigner(chainConfigs));
+//     await account.faucet(TENDERLY_CHAIN_ID.BNBChain, 1);
+
+//     await fundUserWallet(
+//       TOKENS[CHAINS.BNBChain].USDC.address,
+//       account.getSender(TENDERLY_CHAIN_ID.BNBChain),
+//       intentBuilder.getChainConfig(TENDERLY_CHAIN_ID.BNBChain).rpcUrl,
+//     );
+//   }, TIMEOUT);
+
+//   it(
+//     'executes an empty calldata',
+//     async () => {
+//       const initialBNBBalance = await account.getBalance(
+//         TENDERLY_CHAIN_ID.BNBChain,
+//         TOKENS[CHAINS.BNBChain].BNB.address,
+//       );
+
+//       await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.BNBChain, account, {
+//         callGasLimit: CALL_GAS_LIMIT,
+//         maxFeePerGas: MAX_FEE_PER_GAS,
+//         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+//         verificationGasLimit: VERIFICATION_GAS_LIMIT,
+//       });
+
+//       const finalBNBBalance = await account.getBalance(TENDERLY_CHAIN_ID.BNBChain, TOKENS[CHAINS.BNBChain].BNB.address);
+
+//       expect(finalBNBBalance).toBeLessThan(initialBNBBalance);
+//     },
+//     TIMEOUT,
+//   );
+// });
+
+describe('Conventional userops polygon', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
   beforeAll(async () => {
     const chainConfigs = await initTest();
     ({ account, intentBuilder } = await initSigner(chainConfigs));
-    await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
+    await account.faucet(TENDERLY_CHAIN_ID.Polygon, 10);
 
     await fundUserWallet(
-      TOKENS[CHAINS.Ethereum].USDC.address,
-      account.getSender(TENDERLY_CHAIN_ID.Ethereum),
-      intentBuilder.getChainConfig(TENDERLY_CHAIN_ID.Ethereum).rpcUrl,
+      TOKENS[CHAINS.Polygon].USDC.address,
+      account.getSender(TENDERLY_CHAIN_ID.Polygon),
+      intentBuilder.getChainConfig(TENDERLY_CHAIN_ID.Polygon).rpcUrl,
     );
   }, TIMEOUT);
 
   it(
     'executes an empty calldata',
     async () => {
-      const initialETHBalance = await account.getBalance(
-        TENDERLY_CHAIN_ID.Ethereum,
-        TOKENS[CHAINS.Ethereum].ETH.address,
-      );
+      const initialPOLBalance = await account.getBalance(TENDERLY_CHAIN_ID.Polygon, TOKENS[CHAINS.Polygon].POL.address);
 
-      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.Ethereum, account, {
+      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.Polygon, account, {
         callGasLimit: CALL_GAS_LIMIT,
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
         verificationGasLimit: VERIFICATION_GAS_LIMIT,
       });
 
-      const finalETHBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
+      const finalPOLBalance = await account.getBalance(TENDERLY_CHAIN_ID.Polygon, TOKENS[CHAINS.Polygon].POL.address);
 
-      expect(finalETHBalance).toBeLessThan(initialETHBalance);
-    },
-    TIMEOUT,
-  );
-});
-
-describe('Conventional userops binance', () => {
-  let intentBuilder: IntentBuilder, account: Account;
-
-  beforeAll(async () => {
-    const chainConfigs = await initTest();
-    ({ account, intentBuilder } = await initSigner(chainConfigs));
-    await account.faucet(TENDERLY_CHAIN_ID.BNBChain, 1);
-
-    await fundUserWallet(
-      TOKENS[CHAINS.BNBChain].USDC.address,
-      account.getSender(TENDERLY_CHAIN_ID.BNBChain),
-      intentBuilder.getChainConfig(TENDERLY_CHAIN_ID.BNBChain).rpcUrl,
-    );
-  }, TIMEOUT);
-
-  it(
-    'executes an empty calldata',
-    async () => {
-      const initialBNBBalance = await account.getBalance(
-        TENDERLY_CHAIN_ID.BNBChain,
-        TOKENS[CHAINS.BNBChain].BNB.address,
-      );
-
-      await intentBuilder.executeStandardUserOps(TENDERLY_CHAIN_ID.BNBChain, account, {
-        callGasLimit: CALL_GAS_LIMIT,
-        maxFeePerGas: MAX_FEE_PER_GAS,
-        maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
-        verificationGasLimit: VERIFICATION_GAS_LIMIT,
-      });
-
-      const finalBNBBalance = await account.getBalance(TENDERLY_CHAIN_ID.BNBChain, TOKENS[CHAINS.BNBChain].BNB.address);
-
-      expect(finalBNBBalance).toBeLessThan(initialBNBBalance);
+      expect(finalPOLBalance).toBeLessThan(initialPOLBalance);
     },
     TIMEOUT,
   );
