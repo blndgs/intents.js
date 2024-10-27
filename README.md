@@ -57,10 +57,10 @@ const ethAmount = 0.1;
 const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 
 const from = new Loan({
-  address: usdtAddress,
+  address: PROJECTS.Aave,
   amount: amountToBigInt(usdtAmount, 18),
   chainId: toBigInt(CHAINS.BNBChain),
-  asset: PROJECTS.Aave,
+  asset: usdtAddress,
 });
 
 const to = new Stake({
