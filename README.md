@@ -52,21 +52,21 @@ An intent represents a desired outcome. The intent structure consists of two sym
 
 In this example, we are using funds from AAVE (BNB Chain) to stake on Lido (Ethereum):
 ```typescript
-const usdtAmount = 244.7;
-const ethAmount = 0.1;
 const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+const ethtAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 const from = new Loan({
   address: PROJECTS.Aave,
-  amount: amountToBigInt(usdtAmount, 18),
+  amount: amountToBigInt(244.7, 18),
   chainId: toBigInt(CHAINS.BNBChain),
   asset: usdtAddress,
 });
 
 const to = new Stake({
-  amount: amountToBigInt(ethAmount, 18),
+  amount: amountToBigInt(0.1, 18),
   address: PROJECTS.Lido,
   chainId: toBigInt(CHAINS.Ethereum),
+  asset: ethAddress
 });
 
 ```
