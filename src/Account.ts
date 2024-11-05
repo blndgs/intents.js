@@ -47,7 +47,7 @@ export class Account {
       salt: salt,
     });
     const simpleAccount1 = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
+      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC', // old factory address
       salt: salt,
     });
     console.log('simpleAccount', JSON.stringify(simpleAccount)); // this one returns: 0x0000000000000000000000000000000000000000
