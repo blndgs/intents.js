@@ -6,8 +6,6 @@ import { ChainConfigs } from './types';
 
 export class Account {
   private accounts: Map<number, { sender: string; provider: JsonRpcProvider }> = new Map();
-  // chainID -> factory contract address
-  private factoryContractAddresses: Map<number, string> = new Map();
 
   /**
    * Private constructor to enforce the use of factory methods for instantiation.
@@ -26,15 +24,8 @@ export class Account {
     const account = new Account(signer);
     await Promise.all(
       Object.entries(chainConfigs).map(async ([chainId, config]) => {
-        let factory = FACTORY[Number(chainId)];
-        if (config.factory !== undefined) {
-          factory = config.factory;
-        }
-
-        const sender = await Account.getSender(signer, config.bundlerUrl, 0, factory);
+        const sender = await Account.getSender(signer, config.bundlerUrl);
         const provider = new JsonRpcProvider(config.rpcUrl);
-
-        account.factoryContractAddresses.set(Number(chainId), factory);
         account.accounts.set(Number(chainId), { sender, provider });
       }),
     );
@@ -49,17 +40,18 @@ export class Account {
    * @param factory Optional factory address to interact with when generating the sender.
    * @returns The Ethereum address as a string.
    */
-  static async getSender(
-    signer: ethers.Signer,
-    bundlerUrl: string,
-    salt: number = 0,
-    factory: string,
-  ): Promise<string> {
+  static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0): Promise<string> {
     // Convert salt to a number, then to a hex string
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
-      factory: factory,
+      factory: FACTORY, // the factory address is: 0x388b635c58Ee82a6748A2033f4520E6976064CE3
       salt: salt,
     });
+    const simpleAccount1 = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
+      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
+      salt: salt,
+    });
+    console.log('simpleAccount', JSON.stringify(simpleAccount)); // this one returns: 0x0000000000000000000000000000000000000000
+    console.log('simpleAccount1', JSON.stringify(simpleAccount1)); // this returns correct address e.g.; 0x2938bE9a0A4D9AFdA3cbf47F517e21554c9ab3D6
     return simpleAccount.getSender();
   }
 
@@ -75,16 +67,11 @@ export class Account {
       throw new Error(`No account found for chain ID ${chainId}`);
     }
 
-    const factory = this.factoryContractAddresses.get(chainId);
-    if (!factory) {
-      throw new Error(`No factory contract address found for chain ID ${chainId}`);
-    }
-
     let ownerAddress = await this.signer.getAddress();
     ownerAddress = ownerAddress.substring(2); // Remove 0x value
     return nonce !== '0'
       ? '0x'
-      : `${factory}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`;
+      : `${FACTORY}5fbfb9cf000000000000000000000000${ownerAddress}0000000000000000000000000000000000000000000000000000000000000000`;
   }
 
   /**

@@ -39,17 +39,14 @@ export async function initTest(): Promise<ChainConfigs> {
     [Number(process.env.ETH_CHAIN_ID)]: {
       rpcUrl: process.env.ETH_NODE_URL,
       bundlerUrl: process.env.ETH_BUNDLER_URL,
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
     },
     [Number(process.env.BSC_CHAIN_ID)]: {
       rpcUrl: process.env.BSC_NODE_URL,
       bundlerUrl: process.env.BSC_BUNDLER_URL,
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
     },
     [Number(process.env.POL_CHAIN_ID)]: {
       rpcUrl: process.env.POL_NODE_URL,
       bundlerUrl: process.env.POL_BUNDLER_URL,
-      factory: '0xb16c1ce2efee29d6b314163293743d2c6306deb6',
     },
   };
   return chainConfigs;
