@@ -43,15 +43,9 @@ export class Account {
   static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0): Promise<string> {
     // Convert salt to a number, then to a hex string
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
-      factory: FACTORY, // the factory address is: 0x388b635c58Ee82a6748A2033f4520E6976064CE3
+      factory: FACTORY,
       salt: salt,
     });
-    const simpleAccount1 = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC', // old factory address
-      salt: salt,
-    });
-    console.log('simpleAccount', JSON.stringify(simpleAccount)); // this one returns: 0x0000000000000000000000000000000000000000
-    console.log('simpleAccount1', JSON.stringify(simpleAccount1)); // this returns correct address e.g.; 0x2938bE9a0A4D9AFdA3cbf47F517e21554c9ab3D6
     return simpleAccount.getSender();
   }
 
