@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { amountToBigInt, hashCrossChainUserOp, hashUserOp, sign, toBigInt, verifySignature } from '../src';
-import { UserOperationBuilder } from 'userop';
+import { UserOperationBuilder } from 'blndgs-userop';
 import { Account } from '../src';
 import { Asset, Intent } from 'blndgs-model';
 import { initTest } from './testUtils';
