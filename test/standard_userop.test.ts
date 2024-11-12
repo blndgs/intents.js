@@ -101,7 +101,7 @@ describe('Conventional userops binance', () => {
   );
 });
 
-//  TODO:: disabling polygon for short time as tenderly RPC response are not working properly.
+// TODO:: disabling polygon because of tenderly rpc issue.
 // describe('Conventional userops polygon', () => {
 //   let intentBuilder: IntentBuilder, account: Account;
 

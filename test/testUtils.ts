@@ -31,28 +31,24 @@ export async function initTest(): Promise<ChainConfigs> {
   if (!process.env.BSC_NODE_URL) throw new Error('BSC_NODE_URL is missing');
   if (!process.env.BSC_CHAIN_ID) throw new Error('BSC_CHAIN_ID is missing');
   //  TODO:: disabling polygon for short time as tenderly RPC response are not working properly.
-  // if (!process.env.POL_BUNDLER_URL) throw new Error('POL_BUNDLER_URL is missing');
-  // if (!process.env.POL_NODE_URL) throw new Error('POL_NODE_URL is missing');
-  // if (!process.env.POL_CHAIN_ID) throw new Error('POL_CHAIN_ID is missing');
+  if (!process.env.POL_BUNDLER_URL) throw new Error('POL_BUNDLER_URL is missing');
+  if (!process.env.POL_NODE_URL) throw new Error('POL_NODE_URL is missing');
+  if (!process.env.POL_CHAIN_ID) throw new Error('POL_CHAIN_ID is missing');
   if (!process.env.MORALIS_API_KEY) throw new Error('MORALIS_API_KEY is missing');
 
   const chainConfigs: ChainConfigs = {
     [Number(process.env.ETH_CHAIN_ID)]: {
       rpcUrl: process.env.ETH_NODE_URL,
       bundlerUrl: process.env.ETH_BUNDLER_URL,
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
     },
     [Number(process.env.BSC_CHAIN_ID)]: {
       rpcUrl: process.env.BSC_NODE_URL,
       bundlerUrl: process.env.BSC_BUNDLER_URL,
-      factory: '0x61e218301932a2550AE8E4Cd1EcfCA7bE64E57DC',
     },
-    //  TODO:: disabling polygon for short time as tenderly RPC response are not working properly.
-    // [Number(process.env.POL_CHAIN_ID)]: {
-    //   rpcUrl: process.env.POL_NODE_URL,
-    //   bundlerUrl: process.env.POL_BUNDLER_URL,
-    //   factory: '0xb16c1ce2efee29d6b314163293743d2c6306deb6',
-    // },
+    [Number(process.env.POL_CHAIN_ID)]: {
+      rpcUrl: process.env.POL_NODE_URL,
+      bundlerUrl: process.env.POL_BUNDLER_URL,
+    },
   };
   return chainConfigs;
 }
