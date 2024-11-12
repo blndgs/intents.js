@@ -30,6 +30,7 @@ export async function initTest(): Promise<ChainConfigs> {
   if (!process.env.BSC_BUNDLER_URL) throw new Error('BSC_BUNDLER_URL is missing');
   if (!process.env.BSC_NODE_URL) throw new Error('BSC_NODE_URL is missing');
   if (!process.env.BSC_CHAIN_ID) throw new Error('BSC_CHAIN_ID is missing');
+  //  TODO:: disabling polygon for short time as tenderly RPC response are not working properly.
   if (!process.env.POL_BUNDLER_URL) throw new Error('POL_BUNDLER_URL is missing');
   if (!process.env.POL_NODE_URL) throw new Error('POL_NODE_URL is missing');
   if (!process.env.POL_CHAIN_ID) throw new Error('POL_CHAIN_ID is missing');

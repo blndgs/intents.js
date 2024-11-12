@@ -1,6 +1,6 @@
 import { ethers, JsonRpcProvider } from 'ethers';
 import { ENTRY_POINT, FACTORY } from './constants';
-import { Presets } from 'userop';
+import { Presets } from 'blndgs-userop';
 import { tokenToFloat, weiToFloat } from './utils';
 import { ChainConfigs } from './types';
 

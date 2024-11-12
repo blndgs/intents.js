@@ -1,6 +1,6 @@
 import { BigInt as ProtoBigInt } from 'blndgs-model';
 import { BytesLike, ethers } from 'ethers';
-import { UserOperationBuilder } from 'userop';
+import { UserOperationBuilder } from 'blndgs-userop';
 import { ENTRY_POINT } from './constants';
 import { Account } from './Account';
 

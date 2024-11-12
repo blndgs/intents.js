@@ -2,13 +2,12 @@
   "author": "",
   "dependencies": {
     "blndgs-model": "^0.45.0",
+    "blndgs-userop": "^0.3.8-useragent",
     "dotenv": "^16.4.5",
     "ethers": "6.13.4",
     "f": "^1.4.0",
     "isomorphic-fetch": "^3.0.0",
-    "moralis": "^2.27.2",
-    "node-fetch": "^3.3.2",
-    "userop": "^0.3.8"
+    "moralis": "^2.27.2"
   },
   "description": "Abstract State Change Expression Library",
   "devDependencies": {
@@ -19,11 +18,11 @@
     "@types/isomorphic-fetch": "^0.0.39",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.8.7",
-    "@typescript-eslint/typescript-estree": "^8.12.2",
+    "@typescript-eslint/typescript-estree": "^8.14",
     "chai": "^5.1.2",
     "eslint": "^9.14.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-jest": "^28.8.3",
+    "eslint-plugin-jest": "^28.9.0",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^15.11.0",
     "jest": "^29.7.0",
@@ -37,7 +36,7 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.12.2"
+    "typescript-eslint": "^8.14.0"
   },
   "files": [
     "dist"

@@ -8,7 +8,7 @@ import {
   VERIFICATION_GAS_LIMIT,
 } from './constants';
 import { hashUserOp, hashCrossChainUserOp, sign, userOpBuilder, verifySignature } from './utils';
-import { Client, UserOperationBuilder } from 'userop';
+import { Client, UserOperationBuilder } from 'blndgs-userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
 import fetch from 'isomorphic-fetch';
@@ -39,7 +39,9 @@ export class IntentBuilder {
 
     for (const [chainId, config] of Object.entries(chainConfigs)) {
       const numericChainId = Number(chainId);
-      clients.set(numericChainId, await Client.init(config.bundlerUrl));
+      // setting user-agent too
+      // TODO:: discuss dynamic or static user-agent for WAF
+      clients.set(numericChainId, await Client.init(config.bundlerUrl, 'MyCustomUserAgent/1.0'));
       configs.set(numericChainId, config);
     }
 
