@@ -6,7 +6,6 @@ import { BytesLike } from 'ethers';
 export interface ChainConfig {
   rpcUrl: string;
   bundlerUrl: string;
-  factory?: string;
 }
 
 /**
@@ -17,8 +16,8 @@ export interface ChainConfig {
  * The keys are chain IDs (numbers) and the values are the corresponding ChainConfig objects.
  * @example
  * const configs: ChainConfigs = {
- *   1: { rpcUrl: "https://eth-mainnet.example.com", bundlerUrl: "https://bundler.example.com", factory: "0x..." },
- *   56: { rpcUrl: "https://bsc-mainnet.example.com", bundlerUrl: "https://bsc-bundler.example.com", factory: "0x..." }
+ *   1: { rpcUrl: "https://eth-mainnet.example.com", bundlerUrl: "https://bundler.example.com"},
+ *   56: { rpcUrl: "https://bsc-mainnet.example.com", bundlerUrl: "https://bsc-bundler.example.com"}
  * };
  */
 export type ChainConfigs = Record<number, ChainConfig>;
