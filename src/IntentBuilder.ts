@@ -5,6 +5,7 @@ import {
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
   PRE_VERIFICATION_GAS,
+  USER_AGENT,
   VERIFICATION_GAS_LIMIT,
 } from './constants';
 import { hashUserOp, hashCrossChainUserOp, sign, userOpBuilder, verifySignature } from './utils';
@@ -39,9 +40,8 @@ export class IntentBuilder {
 
     for (const [chainId, config] of Object.entries(chainConfigs)) {
       const numericChainId = Number(chainId);
-      // setting user-agent too
-      // TODO:: discuss dynamic or static user-agent for WAF
-      clients.set(numericChainId, await Client.init(config.bundlerUrl, 'MyCustomUserAgent/1.0'));
+      // setting user-agent
+      clients.set(numericChainId, await Client.init(config.bundlerUrl, USER_AGENT));
       configs.set(numericChainId, config);
     }
 

@@ -1,5 +1,5 @@
 import { ethers, JsonRpcProvider } from 'ethers';
-import { ENTRY_POINT, FACTORY } from './constants';
+import { ENTRY_POINT, FACTORY, USER_AGENT } from './constants';
 import { Presets } from 'blndgs-userop';
 import { tokenToFloat, weiToFloat } from './utils';
 import { ChainConfigs } from './types';
@@ -42,7 +42,7 @@ export class Account {
    */
   static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0): Promise<string> {
     // Convert salt to a number, then to a hex string
-    const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, {
+    const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, USER_AGENT, {
       factory: FACTORY,
       salt: salt,
     });
