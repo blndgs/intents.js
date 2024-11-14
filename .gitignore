@@ -1,12 +1,13 @@
 # Dependency directories
 node_modules/
+ctrf/
 
 # Environment variables
 .env
 
 # Build outputs
-dist/
 build/
+dist/
 coverage/
 
 # IDE and editor directories

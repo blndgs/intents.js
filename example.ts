@@ -1,42 +1,47 @@
-import { IntentBuilder, From, To, Projects } from './src/index';
+import { IntentBuilder, PROJECTS, CHAINS, Loan, Stake, toBigInt, Account, amountToBigInt } from './src';
 import { ethers } from 'ethers';
-const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-const PRIVATE_KEY = "";
-const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+import { ChainConfigs } from './src/types';
 
+const signer = new ethers.Wallet('private key');
 
-const intentBuilder = new IntentBuilder();
+const usdtAmount = 244.7;
+const ethAmount = 0.1;
+const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 
-const fromIntent: From = [{
-    locationAddress: '0xUserWalletAddress',
-    chainId: '1', // Example Ethereum mainnet
-    asset: {
-        address: '0xAssetContractAddress',
-        amount: 1.0,
+const from = new Loan({
+  address: PROJECTS.Aave,
+  amount: amountToBigInt(usdtAmount, 18),
+  chainId: toBigInt(CHAINS.BNBChain),
+  asset: usdtAddress,
+});
+
+const to = new Stake({
+  amount: amountToBigInt(ethAmount, 18),
+  address: PROJECTS.Lido,
+  chainId: toBigInt(CHAINS.Ethereum),
+});
+
+async function executeIntent() {
+  const chainConfigs: ChainConfigs = {
+    1: {
+      rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/13d45a24-2474-431e-8f19-31f251f6cd2a',
+      bundlerUrl: 'https://eth.bundler.dev.balloondogs.network',
     },
-}];
-
-const toIntent: To = [{
-    locationAddress: Projects.Staking.Lido, // Assuming Projects.Lido is the contract address
-    chainId: '1',
-    asset: {
-        address: '0xTargetAssetAddress',
-        amount: 1.0,
+    56: {
+      rpcUrl: 'https://virtual.binance.rpc.tenderly.co/4e9d15b6-3c42-43b7-a254-359a7893e8e6',
+      bundlerUrl: 'https://bsc.bundler.dev.balloondogs.network',
     },
-}];
+  };
 
+  const account = await Account.createInstance(signer, chainConfigs);
+  const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
 
-// Add the fromIntent
-intentBuilder.addFrom(fromIntent);
+  try {
+    await intentBuilder.execute(from, to, account, 888);
+    console.log('Intent executed successfully.');
+  } catch (error) {
+    console.error('Error executing intent:', error);
+  }
+}
 
-// Add the toIntent
-intentBuilder.addTo(toIntent);
-
-intentBuilder.execute(signer)
-    .then(() => console.log('Intent executed successfully.'))
-    .catch((error) => console.error('Error executing intent:', error));
-
-
-
-
-
+executeIntent();

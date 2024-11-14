@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDirs": ["./src","test"],
+    "module": "CommonJS",
+    // Module system
+    "target": "ES6",
+    // Compilation target
+    "declaration": true,
+    "declarationDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "include": ["./src/**/*"],
+  // Adjust if your files are in a different directory
+  "exclude": ["node_modules", "test"]
+}

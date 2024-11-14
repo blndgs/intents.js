@@ -1,18 +1,61 @@
 {
-  "name": "intent",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
   "dependencies": {
-    "ethers": "5.7.0"
+    "blndgs-model": "^0.45.0",
+    "blndgs-userop": "^0.3.81-useragent",
+    "dotenv": "^16.4.5",
+    "ethers": "6.13.4",
+    "f": "^1.4.0",
+    "isomorphic-fetch": "^3.0.0",
+    "moralis": "^2.27.2"
   },
+  "description": "Abstract State Change Expression Library",
   "devDependencies": {
-    "@types/node": "^20.11.16"
-  }
+    "@eslint/js": "^9.14.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^12.0.1",
+    "@sinonjs/referee-sinon": "^12.0.0",
+    "@types/isomorphic-fetch": "^0.0.39",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.8.7",
+    "@typescript-eslint/typescript-estree": "^8.14",
+    "chai": "^5.1.2",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^28.9.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.11.0",
+    "jest": "^29.7.0",
+    "jest-ctrf-json-reporter": "^0.0.9",
+    "jsverify": "^0.8.4",
+    "knuth-shuffle": "^1.0.8",
+    "mocha": "^10.8.2",
+    "prettier": "^3.3.3",
+    "semantic-release": "^24.2.0",
+    "sinon": "^19.0.2",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.14.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://balloondogs.network/",
+  "keywords": [],
+  "license": "ISC",
+  "main": "./dist/index.js",
+  "name": "intents.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blndgs/intents.js.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "types": "./dist/index.d.ts",
+  "version": "1.4.4"
 }
