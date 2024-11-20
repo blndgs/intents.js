@@ -48,9 +48,11 @@ const account = await Account.createInstance(signer, chainConfigs);
 ```
 
 ### 3. Create an Intent
+
 An intent represents a desired outcome. The intent structure consists of two symmetric source and destination states.
 
 In this example, we are using funds from AAVE (BNB Chain) to stake on Lido (Ethereum):
+
 ```typescript
 const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 const ethtAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
@@ -66,33 +68,33 @@ const to = new Stake({
   amount: amountToBigInt(0.1, 18),
   address: PROJECTS.Lido,
   chainId: toBigInt(CHAINS.Ethereum),
-  asset: ethAddress
+  asset: ethAddress,
 });
-
 ```
 
 ### 4. Execute the Intent
+
 Simply provide the source and destination states along with the associated account.
 
 The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the BalloonDogs network.
- 
 
 ```typescript
-  const solvedHash = await intentBuilder.execute(source, destination, account);
+const solvedHash = await intentBuilder.execute(source, destination, account);
 ```
 
 ### 5. Fetch the Onchain Transaction Receipt
+
 After the transaction is executed, you can fetch the receipt:
+
 ```typescript
+const receipt = await intentBuilder.getReceipt(1, solvedHash);
 
-const receipt = await intentBuilder.getReceipt(1, solvedHash)
-
-const txHash = receipt.result.receipt.transactionHash
+const txHash = receipt.result.receipt.transactionHash;
 
 console.log(
   `View your tx onchain using any explorer:
    Hash: ${txHash}
-   tx link: https://etherscan.io/tx/${txHash}`
+   tx link: https://etherscan.io/tx/${txHash}`,
 );
 ```
 
@@ -108,7 +110,9 @@ The SDK offers several utility functions for managing conversions and amounts:
 - `amountToBigInt(amount: number, decimal: number): ProtoBigInt`
 
 ## Sending a conventional userOp
+
 The BalloonDogs network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
+
 ```typescript
 await intentBuilder.executeStandardUserOps(account, ChainID, {
   calldata: '0x', // optional
@@ -118,7 +122,6 @@ await intentBuilder.executeStandardUserOps(account, ChainID, {
   verificationGasLimit: VERIFICATION_GAS_LIMIT,
 });
 ```
-
 
 ## Contributing
 

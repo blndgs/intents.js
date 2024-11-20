@@ -135,3 +135,31 @@ describe('Conventional userops polygon', () => {
     TIMEOUT,
   );
 });
+
+// temp test to check AA24 error
+// describe('Conventional userops polygon', () => {
+//   let intentBuilder: IntentBuilder, account: Account;
+
+//   beforeAll(async () => {
+//     const chainConfigs = await initTest();
+//     ({ account, intentBuilder } = await initSigner(chainConfigs));
+//   }, TIMEOUT);
+
+//   it(
+//     'executes cross chain call to validate signature with bundler',
+//     async () => {
+//       const from = new Asset({
+//           address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+//           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+//           chainId: toBigInt(137),
+//         }),
+//         to = new Stake({
+//           address: '0x1adB950d8bB3dA4bE104211D5AB038628e477fE6',
+//           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+//           chainId: toBigInt(56),
+//         });
+//       await intentBuilder.execute(from, to, account, 137);
+//     },
+//     TIMEOUT,
+//   );
+// });

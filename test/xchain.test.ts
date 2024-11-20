@@ -30,8 +30,32 @@ describe('computeUserOpHash', () => {
   });
 });
 
-describe('computeMessageHash', () => {
-  it('should compute a valid hash for multiple UserOperations', () => {
+describe('UserOperation Hash Tests', () => {
+  it('should compute a valid hash for a UserOperation', () => {
+    const mockUserOp = {
+      sender: '0x1234567890123456789012345678901234567890',
+      nonce: '1',
+      initCode: '0x',
+      callData: '0x1234',
+      callGasLimit: '1000000',
+      verificationGasLimit: '1000000',
+      preVerificationGas: '1000000',
+      maxFeePerGas: '1000000000',
+      maxPriorityFeePerGas: '1000000000',
+      paymasterAndData: '0x',
+    };
+
+    const mockBuilder = {
+      getOp: jest.fn().mockReturnValue(mockUserOp),
+    } as unknown as UserOperationBuilder;
+
+    const expectedHash = '0xfb65960f1001da5618a675bb640a3dcf9c2d6446c1dc2cb29dd9cd17ebdc6756';
+    const hash = hashUserOp(1, mockBuilder);
+
+    expect(hash).toEqual(expectedHash);
+  });
+
+  it('should compute a valid cross-chain hash for multiple UserOperations', () => {
     const mockUserOp1 = {
       sender: '0x1234567890123456789012345678901234567890',
       nonce: '1',
@@ -59,9 +83,9 @@ describe('computeMessageHash', () => {
     } as unknown as UserOperationBuilder;
 
     const chainIds = [1, 56];
-
     const hash = hashCrossChainUserOp(chainIds, [mockBuilder1, mockBuilder2]);
     const expectedHash = '0xd9838e154a554803476cd7fdc53c9837e3e43e466cc13ae55848885901ab4150';
+
     expect(hash).toEqual(expectedHash);
   });
 
@@ -180,4 +204,135 @@ describe('Cross-Chain ECDSA Signature', () => {
 
     expect(simpleRecoveredAddress.toLowerCase()).toBe(actualSignerAddress.toLowerCase());
   });
+});
+
+describe('Signature Verification Tests', () => {
+  it(
+    'should generate and verify a valid cross-chain signature',
+    async () => {
+      const sender = '0xc47331bcCdB9b68C54ABe2783064a91FeA22271b';
+      const sourceChainID = 137; // Polygon
+      const destChainID = 56; // BSC
+
+      const from = new Asset({
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        amount: amountToBigInt(1, 18),
+        chainId: toBigInt(sourceChainID),
+      });
+
+      const to = new Asset({
+        address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+        amount: amountToBigInt(1, 18),
+        chainId: toBigInt(destChainID),
+      });
+
+      const calldata = ethers.toUtf8Bytes(
+        JSON.stringify(new Intent({ from: { case: 'fromAsset', value: from }, to: { case: 'toAsset', value: to } })),
+      );
+
+      const sourceUserOp = new UserOperationBuilder()
+        .useDefaults({ sender })
+        .setCallData(calldata)
+        .setPreVerificationGas('21000')
+        .setMaxFeePerGas('20000000000')
+        .setMaxPriorityFeePerGas('1000000000')
+        .setVerificationGasLimit('100000')
+        .setCallGasLimit('100000')
+        .setNonce('0')
+        .setInitCode('0x');
+
+      const destUserOp = new UserOperationBuilder();
+      destUserOp.useDefaults(sourceUserOp.getOp());
+
+      const chainIDs = [sourceChainID, destChainID];
+      const userOps = [sourceUserOp, destUserOp];
+
+      const privateKey = 'e8776ff1bf88707b464bda52319a747a71c41a137277161dcabb9f821d6c0bd7';
+      const wallet = new ethers.Wallet(privateKey);
+      const configs = await initTest();
+      const account = await Account.createInstance(wallet, configs);
+
+      const actualSignerAddress = await account.signer.getAddress();
+
+      const messageHash = hashCrossChainUserOp(chainIDs, userOps);
+      const signature = await sign(messageHash, account);
+      const isValid = await verifySignature(messageHash, signature, account);
+
+      expect(isValid).toBe(true);
+
+      const recoveredAddress = ethers.verifyMessage(ethers.getBytes(messageHash), signature);
+      expect(recoveredAddress.toLowerCase()).toBe(actualSignerAddress.toLowerCase());
+    },
+    TIMEOUT,
+  );
+});
+
+describe('CLI Integration Tests', () => {
+  it(
+    'should match Go CLI outputs',
+    async () => {
+      const goSignedHash = '0x4501ef6b08a4b39e1effc8a14c6feb5435c9cc87db20b4080f37cb11c7361013';
+      const sender = '0x8Ee0051fDb9Bb3e3Ac94faa30d31895FA9A3ADC5';
+      const sourceChainID = 137; // Polygon
+      const destChainID = 56; // BSC
+
+      const from = new Asset({
+        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        amount: amountToBigInt(1, 18),
+        chainId: toBigInt(sourceChainID),
+      });
+
+      const to = new Asset({
+        address: '0x1adB950d8bB3dA4bE104211D5AB038628e477fE6',
+        amount: amountToBigInt(1, 18),
+        chainId: toBigInt(destChainID),
+      });
+
+      const calldata = ethers.toUtf8Bytes(
+        JSON.stringify(new Intent({ from: { case: 'fromAsset', value: from }, to: { case: 'toStake', value: to } })),
+      );
+
+      const sourceUserOp = new UserOperationBuilder()
+        .useDefaults({ sender })
+        .setCallData(calldata)
+        .setPreVerificationGas('626688')
+        .setMaxFeePerGas('0')
+        .setMaxPriorityFeePerGas('0')
+        .setVerificationGasLimit('628384')
+        .setCallGasLimit('800000')
+        .setNonce('4')
+        .setInitCode('0x');
+
+      const destUserOp = new UserOperationBuilder();
+      destUserOp.useDefaults(sourceUserOp.getOp());
+
+      const chainIDs = [sourceChainID, destChainID];
+      const userOps = [sourceUserOp, destUserOp];
+
+      // Debugging step: Log serialized UserOperations
+      console.log('Serialized Source UserOperation:', sourceUserOp.getOp());
+      console.log('Serialized Destination UserOperation:', destUserOp.getOp());
+
+      const messageHash = hashCrossChainUserOp(chainIDs, userOps);
+
+      // Debugging step: Log the computed hash
+      console.log('Computed Message Hash:', messageHash);
+
+      // Verify the signature
+      const privateKey = 'bd981a4345ea3bb934e2aa129e92b9ea5272d20468221ddbc8f2c2384c793da6';
+      const wallet = new ethers.Wallet(privateKey);
+      const configs = await initTest();
+      const account = await Account.createInstance(wallet, configs);
+
+      const signature = await sign(messageHash, account);
+      const isValid = await verifySignature(messageHash, signature, account);
+
+      console.log('Generated Signature:', signature);
+      console.log('Is Signature Valid:', isValid);
+
+      expect(messageHash).toEqual(goSignedHash);
+      expect(isValid).toBe(true);
+    },
+    TIMEOUT,
+  );
 });

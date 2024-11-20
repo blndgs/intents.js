@@ -2,13 +2,21 @@ import { BytesLike, ethers } from 'ethers';
 import { ChainConfig, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
 import {
   CALL_GAS_LIMIT,
+  ENTRY_POINT,
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
   PRE_VERIFICATION_GAS,
   USER_AGENT,
   VERIFICATION_GAS_LIMIT,
 } from './constants';
-import { hashUserOp, hashCrossChainUserOp, sign, userOpBuilder, verifySignature } from './utils';
+import {
+  hashUserOp,
+  hashCrossChainUserOp,
+  sign,
+  userOpBuilder,
+  verifyCrossChainSignature,
+  appendXCallData,
+} from './utils';
 import { Client, UserOperationBuilder } from 'blndgs-userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
@@ -126,19 +134,24 @@ export class IntentBuilder {
     account: Account,
     calldata: BytesLike,
   ): Promise<UserOpExecutionResponse> {
-    const chainIDs = [sourceChainId, destChainId];
     const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
     const destBuilder = await this.createUserOpBuilder(destChainId, account, calldata);
     const builders = [sourceBuilder, destBuilder];
-
+    const chainIDs = [sourceChainId, destChainId];
+    // Step 1: Generate cross-chain hash
     const userOpHash = hashCrossChainUserOp(chainIDs, builders);
+    // Step 2: Sign the hash
     const signature = await sign(userOpHash, account);
-
-    const isValid = await verifySignature(userOpHash, signature, account);
+    // Step 3: Verify the signature
+    const isValid = await verifyCrossChainSignature(builders, chainIDs, account, signature);
     if (!isValid) {
-      throw new Error('Cross-chain signature is invalid');
+      throw new Error('Cross-chain signature verification failed');
     }
+    // Step 4: Append XCallData
+    appendXCallData(builders, ENTRY_POINT, [userOpHash, userOpHash]);
+    // Step 5: Append the signature to the builders
     builders.forEach(builder => builder.setSignature(signature));
+    // Step 6: Send the UserOperation
     const client = this.getClient(sourceChainId);
     // tx to be send on source chain only.
     const res = await client.sendUserOperation(sourceBuilder);
