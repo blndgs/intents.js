@@ -74,7 +74,7 @@ export class Account {
    * @param sender The sender's address to query the nonce for.
    * @returns The nonce as a string.
    */
-  async getNonce(chainId: number, sender: string): Promise<string> {
+  async getERC4337Nonce(chainId: number, sender: string): Promise<string> {
     const account = this.accounts.get(chainId);
     if (!account) {
       throw new Error(`No account found for chain ID ${chainId}`);

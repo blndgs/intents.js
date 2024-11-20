@@ -138,7 +138,7 @@ export async function userOpBuilder(
   },
 ): Promise<UserOperationBuilder> {
   const sender = account.getSender(chainId);
-  const nonce = await account.getNonce(chainId, sender);
+  const nonce = await account.getERC4337Nonce(chainId, sender);
   const initCode = await account.getInitCode(chainId, nonce);
 
   return new UserOperationBuilder()
@@ -198,9 +198,21 @@ export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperation
   if (chainIDs.length !== builders.length) {
     throw new Error('Number of chainIDs and userOps must match');
   }
+
+  // Compute hashes for each UserOperation
   const hashes = builders.map((builder, i) => hashUserOp(chainIDs[i], builder));
-  const sortedHashes = hashes.sort((a, b) => (BigInt(a) < BigInt(b) ? -1 : BigInt(a) > BigInt(b) ? 1 : 0));
+
+  // Sort hashes by byte comparison
+  const sortedHashes = hashes.sort((a, b) => {
+    const bufferA = ethers.getBytes(a);
+    const bufferB = ethers.getBytes(b);
+    return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
+  });
+
+  // Concatenate sorted hashes
   const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
+
+  // Compute and return the final hash
   return ethers.keccak256(concatenatedHashes);
 }
 
@@ -229,4 +241,42 @@ export async function verifySignature(messageHash: string, signature: string, ac
   const recoveredAddress = ethers.verifyMessage(messageHashBytes, signature);
   const expectedAddress = await account.signer.getAddress();
   return recoveredAddress.toLowerCase() === expectedAddress.toLowerCase();
+}
+
+/**
+ * Verifies the cross-chain signature.
+ * @param builders - UserOperationBuilders.
+ * @param chainIDs - Array of chain IDs.
+ * @param account - The user's account for signing.
+ */
+export async function verifyCrossChainSignature(
+  builders: UserOperationBuilder[],
+  chainIDs: number[],
+  account: Account,
+  signature: string,
+): Promise<boolean> {
+  const userOpHash = hashCrossChainUserOp(chainIDs, builders);
+  return verifySignature(userOpHash, signature, account);
+}
+
+/**
+ * Generates and appends xCallData for cross-chain UserOperations.
+ */
+export function appendXCallData(builders: UserOperationBuilder[], entryPoint: string, chainHashes: string[]): void {
+  builders.forEach((builder, index) => {
+    const xCallData = encodeCrossChainCallData(entryPoint, chainHashes[(index + 1) % chainHashes.length]);
+    builder.setCallData(xCallData);
+  });
+}
+
+/**
+ * Encodes cross-chain call data for UserOperations.
+ * @param entryPoint - Address of the entry point.
+ * @param nextHash - Hash of the next operation in the chain.
+ * @returns Encoded call data.
+ */
+function encodeCrossChainCallData(entryPoint: string, nextHash: string): BytesLike {
+  // Use ethers.js or manual ABI encoding
+  const abi = ethers.AbiCoder.defaultAbiCoder();
+  return abi.encode(['address', 'bytes32'], [entryPoint, nextHash]);
 }
