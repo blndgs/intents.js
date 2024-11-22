@@ -209,10 +209,12 @@ export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperation
     return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
   });
 
-  // Concatenate sorted hashes
-  const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
+  // Concatenate sorted hashes as raw bytes
+  const concatenatedHashes = sortedHashes.reduce((acc, hash) => {
+    return new Uint8Array([...acc, ...ethers.getBytes(hash)]);
+  }, new Uint8Array());
 
-  // Compute and return the final hash
+  // Compute the aggregate hash
   return ethers.keccak256(concatenatedHashes);
 }
 
@@ -255,28 +257,133 @@ export async function verifyCrossChainSignature(
   account: Account,
   signature: string,
 ): Promise<boolean> {
-  const userOpHash = hashCrossChainUserOp(chainIDs, builders);
-  return verifySignature(userOpHash, signature, account);
-}
+  const crossChainHash = hashCrossChainUserOp(chainIDs, builders);
 
+  console.log('verifyCrossChainSignature: Cross-Chain Hash:', crossChainHash);
+
+  // Recover address from signature
+  const recoveredAddress = ethers.verifyMessage(ethers.getBytes(crossChainHash), signature);
+  console.log('verifyCrossChainSignature: Recovered Address:', recoveredAddress);
+
+  // Compare with the expected signer address
+  const expectedSignerAddress = await account.signer.getAddress();
+  return recoveredAddress.toLowerCase() === expectedSignerAddress.toLowerCase();
+}
+// IsCrossChainOperation
 /**
- * Generates and appends xCallData for cross-chain UserOperations.
+ * Appends xCallData for cross-chain UserOperations.
+ * @param builders - Array of UserOperationBuilders.
+ * @param entryPoint - Address of the entry point.
+ * @param chainHashes - Array of hashes of the UserOperations.
+ * @param intents - Array of intent JSON objects for the operations.
  */
-export function appendXCallData(builders: UserOperationBuilder[], entryPoint: string, chainHashes: string[]): void {
+export function appendXCallData(
+  builders: UserOperationBuilder[],
+  chainHashes: string[],
+  intentJSONs: BytesLike[],
+): void {
+  if (builders.length !== 2) {
+    throw new Error('Only 2 UserOperations are supported');
+  }
+
   builders.forEach((builder, index) => {
-    const xCallData = encodeCrossChainCallData(entryPoint, chainHashes[(index + 1) % chainHashes.length]);
+    const currentIntentJSON = ethers.getBytes(intentJSONs[index]);
+    const currentHash = chainHashes[index];
+    const otherHash = chainHashes[(index + 1) % chainHashes.length];
+    const isSourceOp = index === 0;
+
+    const xCallData = encodeCrossChainCallData(currentIntentJSON, currentHash, otherHash, isSourceOp);
+
     builder.setCallData(xCallData);
+    // TODO:: after aggregation signature set
   });
 }
 
 /**
  * Encodes cross-chain call data for UserOperations.
  * @param entryPoint - Address of the entry point.
- * @param nextHash - Hash of the next operation in the chain.
- * @returns Encoded call data.
+ * @param intentJSON - Intent JSON of the current UserOperation.
+ * @param thisHash - The hash of the current UserOperation.
+ * @param otherHash - The hash of the other UserOperation.
+ * @param isSourceOp - Boolean indicating if this is the source operation.
+ * @returns Encoded call data as a `Uint8Array`.
  */
-function encodeCrossChainCallData(entryPoint: string, nextHash: string): BytesLike {
-  // Use ethers.js or manual ABI encoding
-  const abi = ethers.AbiCoder.defaultAbiCoder();
-  return abi.encode(['address', 'bytes32'], [entryPoint, nextHash]);
+function encodeCrossChainCallData(
+  intentJSON: Uint8Array,
+  thisHash: string,
+  otherHash: string,
+  isSourceOp: boolean,
+): Uint8Array {
+  const CrossChainMarker = 0xffff; // Marker for cross-chain operations
+  const Placeholder = 0xffff; // Placeholder for the current operation hash
+  const OperationHashSize = 32; // Size of a hash in bytes
+
+  // Ensure intentJSON length is within uint16 limits
+  if (intentJSON.length > 0xffff) {
+    throw new Error(`intentJSON length exceeds maximum uint16 value: ${intentJSON.length}`);
+  }
+
+  // Determine chain-specific hash
+  const currentHash = isSourceOp ? thisHash : otherHash;
+
+  // Build the sorted hash list
+  const hashList = buildSortedHashList(currentHash, [thisHash, otherHash]);
+
+  // Calculate total length
+  let totalLength = 2 + 2 + intentJSON.length + 1; // Marker, intent length, intent data, hash list length
+  hashList.forEach(entry => {
+    totalLength += entry.isPlaceholder ? 2 : OperationHashSize; // Placeholder or hash
+  });
+
+  // Create the cross-chain data payload
+  const crossChainData = new Uint8Array(totalLength);
+  let offset = 0;
+
+  // Add marker
+  crossChainData.set(ethers.getBytes(`0x${CrossChainMarker.toString(16).padStart(4, '0')}`), offset);
+  offset += 2;
+
+  // Add intentJSON length and content
+  crossChainData.set(ethers.getBytes(`0x${intentJSON.length.toString(16).padStart(4, '0')}`), offset);
+  offset += 2;
+  crossChainData.set(intentJSON, offset);
+  offset += intentJSON.length;
+
+  // Add hash list length
+  crossChainData[offset++] = hashList.length;
+
+  // Add hash list entries
+  hashList.forEach(entry => {
+    if (entry.isPlaceholder) {
+      crossChainData.set(ethers.getBytes(`0x${Placeholder.toString(16).padStart(4, '0')}`), offset);
+      offset += 2;
+    } else {
+      crossChainData.set(ethers.getBytes(entry.hash), offset);
+      offset += OperationHashSize;
+    }
+  });
+
+  return crossChainData;
+}
+
+/**
+ * Builds a sorted hash list with placeholders for cross-chain operations.
+ * @param thisHash - The hash of the current operation.
+ * @param otherHashes - Array of hashes of the other operations.
+ * @returns Sorted list of hashes with placeholders.
+ */
+function buildSortedHashList(thisHash: string, otherHashes: string[]): { isPlaceholder: boolean; hash: string }[] {
+  const hashes = [
+    { isPlaceholder: true, hash: thisHash },
+    ...otherHashes.map(hash => ({ isPlaceholder: false, hash })),
+  ];
+
+  // Sort hashes in ascending order by byte comparison
+  hashes.sort((a, b) => {
+    const bufferA = ethers.getBytes(a.hash);
+    const bufferB = ethers.getBytes(b.hash);
+    return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
+  });
+
+  return hashes;
 }
