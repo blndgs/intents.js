@@ -82,6 +82,20 @@ The `execute()` function will then wrap the intent as an [ERC-4337](https://eips
 const solvedHash = await intentBuilder.execute(source, destination, account);
 ```
 
+#### 4b. Deposit resulting tokens from intent execution into another address
+
+When staking, supplying loan or swapping tokens, you can deposit the
+swapped tokens to be deposited into another address instead of the address
+that executed the tx.
+
+The `execute` takes an optional config object as below
+
+```ts
+const solvedHash = await intentBuilder.execute(source, destination, account, {
+  recipient: '0xAddress',
+});
+```
+
 ### 5. Fetch the Onchain Transaction Receipt
 
 After the transaction is executed, you can fetch the receipt:
