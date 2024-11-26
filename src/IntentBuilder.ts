@@ -8,6 +8,7 @@ import {
 } from './types';
 import {
   CALL_GAS_LIMIT,
+  ENTRY_POINT,
   MAX_FEE_PER_GAS,
   MAX_PRIORITY_FEE_PER_GAS,
   PRE_VERIFICATION_GAS,
@@ -27,6 +28,7 @@ import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
 import fetch from 'isomorphic-fetch';
 import { Account } from './Account';
+import { aggregate } from './crosschain';
 
 /**
  * Facilitates the building and execution of Intent transactions.
@@ -40,7 +42,7 @@ export class IntentBuilder {
   private constructor(
     private _clients: Map<number, Client>,
     private _chainConfigs: Map<number, ChainConfig>,
-  ) {}
+  ) { }
 
   /**
    * Factory method to create an instance of IntentBuilder using chain configurations.
@@ -143,35 +145,37 @@ export class IntentBuilder {
     account: Account,
     calldata: BytesLike,
   ): Promise<UserOpExecutionResponse> {
-    // Step 1: Create UserOperationBuilders for source and destination chains
     const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
     const destBuilder = await this.createUserOpBuilder(destChainId, account, calldata);
     const builders = [sourceBuilder, destBuilder];
     const chainIDs = [sourceChainId, destChainId];
-
-    // Step 2: Generate cross-chain hash
-    const operationHashes = builders.map((builder, index) => hashUserOp(chainIDs[index], builder));
-    const crossChainHash = hashCrossChainUserOp(chainIDs, builders);
-
-    // Step 3: Sign the cross-chain hash
-    const signature = await sign(crossChainHash, account);
-
-    // Step 4: Verify the signature
+    // Step 1: Generate cross-chain hash
+    const userOpHash = hashCrossChainUserOp(chainIDs, builders);
+    // Step 2: Sign the hash
+    const signature = await sign(userOpHash, account);
+    // Step 3: Verify the signature
     const isValid = await verifyCrossChainSignature(builders, chainIDs, account, signature);
     if (!isValid) {
       throw new Error('Cross-chain signature verification failed');
     }
-    // Step 5: Generate and append XCallData
-    appendXCallData(builders, operationHashes, [calldata, calldata]);
+    // Step 4: Append XCallData
+    appendXCallData(builders, ENTRY_POINT, [userOpHash, userOpHash]);
+
     // Step 5: Append the signature to the builders
     builders.forEach(builder => builder.setSignature(signature));
+
+    // aggregate
+    aggregate(sourceBuilder, destBuilder)
+
     // Step 6: Send the UserOperation
     const client = this.getClient(sourceChainId);
+
     // tx to be send on source chain only.
     const res = await client.sendUserOperation(sourceBuilder);
     if (!isUserOpExecutionResponse(res)) {
       throw new Error(`Unexpected response from Bundler`);
     }
+
     return res;
   }
 
