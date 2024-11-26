@@ -1,5 +1,5 @@
 import { BytesLike, ethers } from 'ethers';
-import { ChainConfig, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
+import { ChainConfig, ExecutionOptions, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
 import {
   CALL_GAS_LIMIT,
   ENTRY_POINT,
@@ -35,7 +35,7 @@ export class IntentBuilder {
   private constructor(
     private _clients: Map<number, Client>,
     private _chainConfigs: Map<number, ChainConfig>,
-  ) {}
+  ) { }
 
   /**
    * Factory method to create an instance of IntentBuilder using chain configurations.
@@ -70,8 +70,7 @@ export class IntentBuilder {
     from: State,
     to: State,
     account: Account,
-    sourceChainId: number,
-    destChainId?: number,
+    { sourceChainId, destChainId, recipient }: ExecutionOptions
   ): Promise<UserOpExecutionResponse> {
     if (sourceChainId === undefined || sourceChainId === 0) {
       throw new Error('sourceChainId is null or zero');
@@ -80,15 +79,16 @@ export class IntentBuilder {
     const intents = new Intent({
       from: this.setFrom(from),
       to: this.setTo(to),
+      recipient,
     });
 
     const calldata = ethers.toUtf8Bytes(JSON.stringify(intents));
 
     if (destChainId && destChainId !== sourceChainId) {
       return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
-    } else {
-      return this.executeSingleChain(sourceChainId, account, calldata);
     }
+
+    return this.executeSingleChain(sourceChainId, account, calldata);
   }
 
   /**

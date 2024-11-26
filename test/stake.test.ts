@@ -16,10 +16,10 @@ describe('Stake', () => {
     'LidoETH',
     async () => {
       const from = new Asset({
-          address: TOKENS[CHAINS.Ethereum].ETH.address,
-          amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-          chainId: toBigInt(CHAINS.Ethereum),
-        }),
+        address: TOKENS[CHAINS.Ethereum].ETH.address,
+        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+        chainId: toBigInt(CHAINS.Ethereum),
+      }),
         to = new Stake({
           address: PROJECTS[CHAINS.Ethereum].Lido,
           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
@@ -34,7 +34,9 @@ describe('Stake', () => {
         TOKENS[CHAINS.Ethereum].STETH.address,
       );
 
-      await intentBuilder.execute(from, to, account, TENDERLY_CHAIN_ID.Ethereum);
+      await intentBuilder.execute(from, to, account, {
+        sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+      });
 
       const finalDaiBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
       const finalStEthBalance = await account.getBalance(
@@ -52,10 +54,10 @@ describe('Stake', () => {
     'Ankr',
     async () => {
       const from = new Asset({
-          address: TOKENS[CHAINS.Ethereum].ETH.address,
-          amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-          chainId: toBigInt(CHAINS.Ethereum),
-        }),
+        address: TOKENS[CHAINS.Ethereum].ETH.address,
+        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+        chainId: toBigInt(CHAINS.Ethereum),
+      }),
         to = new Stake({
           address: PROJECTS[CHAINS.Ethereum].Ankr,
           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
@@ -70,7 +72,9 @@ describe('Stake', () => {
         TOKENS[CHAINS.Ethereum].AETH.address,
       );
 
-      await intentBuilder.execute(from, to, account, TENDERLY_CHAIN_ID.Ethereum);
+      await intentBuilder.execute(from, to, account, {
+        sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+      });
 
       const finalETHBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
       const finalAETHBalance = await account.getBalance(

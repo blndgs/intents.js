@@ -74,7 +74,9 @@ describe('swap', () => {
 
     // Execute swap
     try {
-      await intentBuilder.execute(from, to, account, chainId);
+      await intentBuilder.execute(from, to, account, {
+        sourceChainId: chainId,
+      });
     } catch (error) {
       console.error(`Swap failed: ${error}`);
     }
