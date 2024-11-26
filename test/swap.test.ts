@@ -30,6 +30,7 @@ describe('swap', () => {
     sourceToken: Token,
     targetToken: Token,
     amount: number,
+    recipient?: string,
     slippage = DEFAULT_SLIPPAGE,
   ) {
     // Apply buffer to amount
@@ -76,6 +77,7 @@ describe('swap', () => {
     try {
       await intentBuilder.execute(from, to, account, {
         sourceChainId: chainId,
+        recipient,
       });
     } catch (error) {
       console.error(`Swap failed: ${error}`);
@@ -88,7 +90,9 @@ describe('swap', () => {
    * @param targetToken The token to swap to
    * @param amount The amount to swap
    */
-  const checkAndSwap = async (chainId: number, sourceToken: Token, targetToken: Token, amount: number) => {
+  const checkAndSwap = async (chainId: number,
+    sourceToken: Token, targetToken: Token,
+    amount: number, recipient?: string) => {
     // Initial check for non-positive amount
     if (amount <= 0) {
       console.log(`Skipping ${sourceToken.address} -> ${targetToken.address} due to non-positive amount (${amount})`);
@@ -127,9 +131,9 @@ describe('swap', () => {
 
     // Check if the balance and buffered amount are very close (to handle floating-point precision issues)
     if (Math.abs(balance - bufferedAmount) < BALANCE_THRESHOLD) {
-      await swap(chainId, sourceToken, targetToken, balance);
+      await swap(chainId, sourceToken, targetToken, balance, recipient);
     } else {
-      await swap(chainId, sourceToken, targetToken, bufferedAmount);
+      await swap(chainId, sourceToken, targetToken, bufferedAmount, recipient);
     }
   };
 
@@ -265,6 +269,21 @@ describe('swap', () => {
         TOKENS[CHAINS.Ethereum].LINK,
         TOKENS[CHAINS.Ethereum].DAI,
         balance,
+      );
+    },
+    TIMEOUT,
+  );
+
+  it(
+    'DAI->USDC',
+    async () => {
+      const balance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].LINK.address);
+      await checkAndSwap(
+        TENDERLY_CHAIN_ID.Ethereum,
+        TOKENS[CHAINS.Ethereum].DAI,
+        TOKENS[CHAINS.Ethereum].USDC,
+        balance,
+        "0x000000000000000000000000000000000000dEaD"
       );
     },
     TIMEOUT,
