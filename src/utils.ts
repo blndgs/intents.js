@@ -308,7 +308,7 @@ export function appendXCallData(
  * @param isSourceOp - Boolean indicating if this is the source operation.
  * @returns Encoded call data as a `Uint8Array`.
  */
-function encodeCrossChainCallData(
+export function encodeCrossChainCallData(
   intentJSON: Uint8Array,
   thisHash: string,
   otherHash: string,
