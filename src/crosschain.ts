@@ -1,6 +1,8 @@
 import { UserOperationBuilder } from 'blndgs-userop';
 import { ethers } from 'ethers';
 import { BytesLike, arrayify } from '@ethersproject/bytes';
+import { hashUserOp } from './utils';
+import { Account } from './Account';
 
 const CROSS_CHAIN_MARKER = 0xFFFF;
 const MIN_OP_COUNT = 2;
@@ -11,6 +13,153 @@ const SimpleSignatureLength = 65;
 
 function toBuffer(bytes: BytesLike): Buffer {
   return Buffer.from(arrayify(bytes));
+}
+
+/**
+ * Verifies the cross-chain signature.
+ * @param builders - UserOperationBuilders.
+ * @param chainIDs - Array of chain IDs.
+ * @param account - The user's account for signing.
+ */
+export async function verifyCrossChainSignature(
+  builders: UserOperationBuilder[],
+  chainIDs: number[],
+  account: Account,
+  signature: string,
+): Promise<boolean> {
+  const crossChainHash = hashCrossChainUserOp(chainIDs, builders);
+
+  console.log('verifyCrossChainSignature: Cross-Chain Hash:', crossChainHash);
+
+  // Recover address from signature
+  const recoveredAddress = ethers.verifyMessage(ethers.getBytes(crossChainHash), signature);
+  console.log('verifyCrossChainSignature: Recovered Address:', recoveredAddress);
+
+  // Compare with the expected signer address
+  const expectedSignerAddress = await account.signer.getAddress();
+  return recoveredAddress.toLowerCase() === expectedSignerAddress.toLowerCase();
+}
+
+/**
+ * Computes the combined message hash (xChainHash) for cross-chain signing.
+ *
+ * @param {number[]} chainIDs - An array of chain IDs involved in the cross-chain operation.
+ * @param {UserOperationBuilder[]} builders - An array of UserOperationBuilder instances, one for each chain.
+ * @returns {string} The computed combined message hash.
+ * @throws {Error} If the number of chainIDs doesn't match the number of builders.
+ */
+export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperationBuilder[]): string {
+  if (chainIDs.length !== builders.length) {
+    throw new Error('Number of chainIDs and userOps must match');
+  }
+
+  // Compute hashes for each UserOperation
+  const hashes = builders.map((builder, i) => hashUserOp(chainIDs[i], builder));
+
+  // Sort hashes by byte comparison
+  const sortedHashes = hashes.sort((a, b) => {
+    const bufferA = ethers.getBytes(a);
+    const bufferB = ethers.getBytes(b);
+    return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
+  });
+
+  // Concatenate sorted hashes as raw bytes
+  const concatenatedHashes = sortedHashes.reduce((acc, hash) => {
+    return new Uint8Array([...acc, ...ethers.getBytes(hash)]);
+  }, new Uint8Array());
+
+  // Compute the aggregate hash
+  return ethers.keccak256(concatenatedHashes);
+}
+
+/**
+ * Encodes cross-chain call data for UserOperations.
+ * @param entryPoint - Address of the entry point.
+ * @param intentJSON - Intent JSON of the current UserOperation.
+ * @param thisHash - The hash of the current UserOperation.
+ * @param otherHash - The hash of the other UserOperation.
+ * @param isSourceOp - Boolean indicating if this is the source operation.
+ * @returns Encoded call data as a `Uint8Array`.
+ */
+export function encodeCrossChainCallData(
+  intentJSON: Uint8Array,
+  thisHash: string,
+  otherHash: string,
+  isSourceOp: boolean,
+): Uint8Array {
+  const CrossChainMarker = 0xffff; // Marker for cross-chain operations
+  const Placeholder = 0xffff; // Placeholder for the current operation hash
+  const OperationHashSize = 32; // Size of a hash in bytes
+
+  // Ensure intentJSON length is within uint16 limits
+  if (intentJSON.length > 0xffff) {
+    throw new Error(`intentJSON length exceeds maximum uint16 value: ${intentJSON.length}`);
+  }
+
+  // Determine chain-specific hash
+  const currentHash = isSourceOp ? thisHash : otherHash;
+
+  // Build the sorted hash list
+  const hashList = buildSortedHashList(currentHash, [thisHash, otherHash]);
+
+  // Calculate total length
+  let totalLength = 2 + 2 + intentJSON.length + 1; // Marker, intent length, intent data, hash list length
+  hashList.forEach(entry => {
+    totalLength += entry.isPlaceholder ? 2 : OperationHashSize; // Placeholder or hash
+  });
+
+  // Create the cross-chain data payload
+  const crossChainData = new Uint8Array(totalLength);
+  let offset = 0;
+
+  // Add marker
+  crossChainData.set(ethers.getBytes(`0x${CrossChainMarker.toString(16).padStart(4, '0')}`), offset);
+  offset += 2;
+
+  // Add intentJSON length and content
+  crossChainData.set(ethers.getBytes(`0x${intentJSON.length.toString(16).padStart(4, '0')}`), offset);
+  offset += 2;
+  crossChainData.set(intentJSON, offset);
+  offset += intentJSON.length;
+
+  // Add hash list length
+  crossChainData[offset++] = hashList.length;
+
+  // Add hash list entries
+  hashList.forEach(entry => {
+    if (entry.isPlaceholder) {
+      crossChainData.set(ethers.getBytes(`0x${Placeholder.toString(16).padStart(4, '0')}`), offset);
+      offset += 2;
+    } else {
+      crossChainData.set(ethers.getBytes(entry.hash), offset);
+      offset += OperationHashSize;
+    }
+  });
+
+  return crossChainData;
+}
+
+
+/**
+ * Builds a sorted hash list with placeholders for cross-chain operations.
+ * @param thisHash - The hash of the current operation.
+ * @param otherHashes - Array of hashes of the other operations.
+ * @returns Sorted list of hashes with placeholders.
+ */
+function buildSortedHashList(thisHash: string, otherHashes: string[]): { isPlaceholder: boolean; hash: string }[] {
+  const hashes = [
+    { isPlaceholder: true, hash: thisHash },
+    ...otherHashes.map(hash => ({ isPlaceholder: false, hash })),
+  ];
+
+  // Sort hashes in ascending order by byte comparison
+  hashes.sort((a, b) => {
+    const bufferA = ethers.getBytes(a.hash);
+    const bufferB = ethers.getBytes(b.hash);
+    return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
+  });
+
+  return hashes;
 }
 
 /**

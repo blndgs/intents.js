@@ -1,12 +1,9 @@
 import { ethers } from 'ethers';
 import {
   amountToBigInt,
-  appendXCallData,
-  hashCrossChainUserOp,
   hashUserOp,
   sign,
   toBigInt,
-  verifyCrossChainSignature,
   verifySignature,
 } from '../src';
 import { UserOperationBuilder } from 'blndgs-userop';
@@ -14,6 +11,7 @@ import { Account } from '../src';
 import { Asset, Intent, Stake } from 'blndgs-model';
 import { initTest } from './testUtils';
 import { TIMEOUT } from './constants';
+import { hashCrossChainUserOp, verifyCrossChainSignature } from '../src/crosschain';
 
 describe('computeUserOpHash', () => {
   it('should compute a valid hash for a UserOperation', () => {
