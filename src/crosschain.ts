@@ -22,7 +22,7 @@ function toBuffer(bytes: BytesLike): Buffer {
  * @throws Error if validation fails
  */
 export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBuilder): void {
-  // Validate both main and userop to embed are cross-chain operations
+  // 1. Validate cross-chain operations
   if (!isCrossChainOperation(op)) {
     throw new Error('Called UserOperationBuilder is not a valid cross-chain userOp');
   }
@@ -31,21 +31,19 @@ export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBui
     throw new Error('UserOperationBuilder to embed is not a valid cross-chain userOp');
   }
 
-  // Get signature index
+  // 2. Check signature
   const signature = toBuffer(op.getSignature());
   const signatureEndIdx = getSignatureEndIdx(signature);
   if (signatureEndIdx === 0) {
     throw new Error('Unsigned UserOperationBuilders are not supported');
   }
 
-  // Get the packed data from embedded op
+  // 3. Get packed data
   const packedData = getPackedData(embeddedOp);
 
-  // Check existing packed data
+  // 4. Check existing packed data for idempotency
   if (signature.length > signatureEndIdx) {
     const existingPackedData = signature.slice(signatureEndIdx);
-
-    // idempotency check - if already aggregated with same data, return
     if (existingPackedData.length === packedData.length + 1 &&
       existingPackedData[0] === 1 &&
       Buffer.compare(existingPackedData.slice(1), packedData) === 0) {
@@ -53,12 +51,11 @@ export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBui
     }
   }
 
-  // Create new signature with packed data
-  const newSignature = Buffer.concat([
-    signature.slice(0, signatureEndIdx),
-    Buffer.from([1]),
-    packedData,
-  ]);
+  // 5. Create new signature
+  const newSignature = Buffer.alloc(signatureEndIdx + 1 + packedData.length);
+  signature.copy(newSignature, 0, 0, signatureEndIdx);
+  newSignature[signatureEndIdx] = 1;
+  packedData.copy(newSignature, signatureEndIdx + 1);
 
   op.setSignature(newSignature);
 }
@@ -67,28 +64,33 @@ function getPackedData(op: UserOperationBuilder): Buffer {
   const buffers: Buffer[] = [];
 
   // Write nonce (32 bytes)
-  const nonceBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getNonce().toString())), 32);
+  const nonce = BigInt(op.getNonce().toString());
+  const nonceBytes = ethers.zeroPadValue(ethers.toBeArray(nonce), 32);
   buffers.push(Buffer.from(nonceBytes));
 
-  // Write gas fields (8 bytes each)
-  const callGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getCallGasLimit().toString())), 8);
+  // Write gas limits (8 bytes each)
+  const callGasLimit = BigInt(op.getCallGasLimit().toString());
+  const callGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(callGasLimit), 8);
   buffers.push(Buffer.from(callGasLimitBytes));
 
-  const preVerificationGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getPreVerificationGas().toString())), 8);
+  const preVerificationGas = BigInt(op.getPreVerificationGas().toString());
+  const preVerificationGasBytes = ethers.zeroPadValue(ethers.toBeArray(preVerificationGas), 8);
   buffers.push(Buffer.from(preVerificationGasBytes));
 
-  const verificationGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getVerificationGasLimit().toString())), 8);
+  const verificationGasLimit = BigInt(op.getVerificationGasLimit().toString());
+  const verificationGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(verificationGasLimit), 8);
   buffers.push(Buffer.from(verificationGasLimitBytes));
 
-  // Write maxFeePerGas (32 bytes)
-  const maxFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getMaxFeePerGas().toString())), 32);
+  // Write gas prices (32 bytes each)
+  const maxFeePerGas = BigInt(op.getMaxFeePerGas().toString());
+  const maxFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(maxFeePerGas), 32);
   buffers.push(Buffer.from(maxFeePerGasBytes));
 
-  // Write maxPriorityFeePerGas (32 bytes)
-  const maxPriorityFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getMaxPriorityFeePerGas().toString())), 32);
+  const maxPriorityFeePerGas = BigInt(op.getMaxPriorityFeePerGas().toString());
+  const maxPriorityFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(maxPriorityFeePerGas), 32);
   buffers.push(Buffer.from(maxPriorityFeePerGasBytes));
 
-  // Extract and write hash list from the callData
+  // Write hash list
   const crossChainData = parseCrossChainData(toBuffer(op.getCallData()));
   const hashListBytes = serializeHashList(crossChainData.hashList);
   buffers.push(hashListBytes);
@@ -103,26 +105,25 @@ function getPackedData(op: UserOperationBuilder): Buffer {
 }
 
 /**
- * Checks if a UserOperationBuilder is a cross-chain operation. This validates the
- * callData and signature fields for cross-chain data format from the spec
+ * Checks if a UserOperationBuilder is a cross-chain operation.
  *
  * @param op - The UserOperationBuilder to check
  * @returns boolean - True if the operation is a cross-chain operation
  */
 export function isCrossChainOperation(op: UserOperationBuilder): boolean {
-  // Convert BytesLike to Buffer for consistent handling
-  const callData = toBuffer(op.getCallData());
-  const signature = toBuffer(op.getSignature());
-
   // Check if callData contains cross-chain data
-  const isCallDataCrossChain = isCrossChainData(callData, MIN_OP_COUNT, MAX_OP_COUNT);
+  if (isCrossChainData(toBuffer(op.getCallData()), MIN_OP_COUNT, MAX_OP_COUNT)) {
+    return true;
+  }
 
-  // If signature exists and has content after the signature end index,
+  // Check if signature exists and has content after the signature end index
+  const signature = toBuffer(op.getSignature());
   const signatureEndIdx = getSignatureEndIdx(signature);
-  const isSignatureCrossChain =
-    signature.length > signatureEndIdx && isCrossChainData(signature.slice(signatureEndIdx), 1, MAX_OP_COUNT);
+  if (signatureEndIdx > 0 && signature.length > signatureEndIdx) {
+    return isCrossChainData(signature.slice(signatureEndIdx), 1, MAX_OP_COUNT);
+  }
 
-  return isCallDataCrossChain || isSignatureCrossChain;
+  return false;
 }
 
 /**
@@ -141,72 +142,76 @@ export function isCrossChainOperation(op: UserOperationBuilder): boolean {
  * @returns boolean - True if the data follows cross-chain format
  */
 function isCrossChainData(data: Buffer, minHashListLength: number, maxHashListLength: number): boolean {
-  try {
-    // Minimum length check: 2 (opType) + 2 (intentJSONLength) = 4 bytes
-    if (data.length < 4) {
-      return false;
-    }
-
-    // Check opType marker
-    const opType = data.readUInt16BE(0);
-    if (opType !== CROSS_CHAIN_MARKER) {
-      return false;
-    }
-
-    // Read intent JSON length
-    const intentJSONLength = data.readUInt16BE(2);
-
-    // Check if data is long enough to contain the intent JSON
-    const minLength = 4 + intentJSONLength + 1; // +1 for hash list length
-    if (data.length < minLength) {
-      return false;
-    }
-
-    // Read hash list length
-    const hashListLength = data[4 + intentJSONLength];
-
-    // Validate hash list length
-    if (hashListLength < minHashListLength || hashListLength > maxHashListLength) {
-      return false;
-    }
-
-    return true;
-  } catch {
+  // Minimum length check: 2 (opType) + 2 (intentJSONLength) = 4 bytes
+  if (data.length < 4) {
     return false;
   }
+
+  // Check opType marker
+  const opType = data.readUInt16BE(0);
+  if (opType !== CROSS_CHAIN_MARKER) {
+    return false;
+  }
+
+  // Read intent JSON length
+  const intentJSONLength = data.readUInt16BE(2);
+
+  // Check if data is long enough to contain the intent JSON and hash list length
+  const minLength = 4 + intentJSONLength + 1; // +1 for hash list length
+  if (data.length < minLength) {
+    return false;
+  }
+
+  // Read hash list length
+  const hashListLength = data[4 + intentJSONLength];
+
+  // Validate hash list length
+  if (hashListLength < minHashListLength || hashListLength > maxHashListLength) {
+    return false;
+  }
+
+  return true;
 }
 
 function getSignatureEndIdx(signature: Buffer): number {
-  if (signature.length >= 2 && !(signature[0] === 0x30 && signature[1] === 0x78)) {
-    const lenSig = signature.length;
+  // Check if signature has 0x prefix
+  if (signature.length >= 2 && signature[0] === 0x30 && signature[1] === 0x78) {
+    return 0;
+  }
 
-    // Check kernel signature
-    if (lenSig === KernelSignatureLength) {
-      // Cannot have a simple signature length fitting a kernel signature
-      return sigHasKernelPrefix(signature) ? KernelSignatureLength : 0;
-    }
+  const lenSig = signature.length;
 
-    if (lenSig > KernelSignatureLength && sigHasKernelPrefix(signature)) {
+  // Check kernel signature
+  if (lenSig === KernelSignatureLength) {
+    if (hasKernelPrefix(signature)) {
       return KernelSignatureLength;
     }
+    return 0;
+  }
 
-    // Check normal signature
-    if (lenSig >= SimpleSignatureLength) {
-      return SimpleSignatureLength;
-    }
+  if (lenSig > KernelSignatureLength && hasKernelPrefix(signature)) {
+    return KernelSignatureLength;
+  }
+
+  // Check normal signature
+  if (lenSig >= SimpleSignatureLength) {
+    return SimpleSignatureLength;
   }
 
   return 0;
 }
 
-function sigHasKernelPrefix(signature: Buffer): boolean {
-  if (signature.length < KernelSignatureLength) {
+function hasKernelPrefix(signature: Buffer): boolean {
+  if (signature.length < 4) {
     return false;
   }
 
-  const kernelPrefixes = [Buffer.from([0, 0, 0, 0]), Buffer.from([0, 0, 0, 1]), Buffer.from([0, 0, 0, 2])];
-
-  return kernelPrefixes.some(prefix => signature.subarray(0, 4).equals(prefix));
+  const prefix = signature.slice(0, 4);
+  return (
+    Buffer.compare(prefix, Buffer.from([0, 0, 0, 0])) === 0 ||
+    Buffer.compare(prefix, Buffer.from([0, 0, 0, 1])) === 0 ||
+    Buffer.compare(prefix, Buffer.from([0, 0, 0, 2])) === 0
+  );
 }
 
 interface CrossChainHashListEntry {
@@ -242,7 +247,7 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
   }
 
   // Extract
-  const intentJSON = callData.subarray(offset, offset + intentJSONLength);
+  const intentJSON = callData.slice(offset, offset + intentJSONLength);
   offset += intentJSONLength;
 
   // Get HashList length
@@ -274,7 +279,10 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
 
       foundPlaceholder = true;
 
-      hashList.push({ isPlaceholder: true, operationHash: Buffer.alloc(0) });
+      hashList.push({
+        isPlaceholder: true,
+        operationHash: Buffer.alloc(0),
+      });
       offset += 2;
       continue;
     }
@@ -284,12 +292,15 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
       throw new Error('Invalid operation hash');
     }
 
-    const operationHash = callData.subarray(offset, offset + 32);
+    const operationHash = callData.slice(offset, offset + 32);
     if (!validateOperationHash(operationHash)) {
       throw new Error('Invalid hash list hash value');
     }
 
-    hashList.push({ isPlaceholder: false, operationHash });
+    hashList.push({
+      isPlaceholder: false,
+      operationHash,
+    });
     offset += 32;
   }
 
