@@ -231,6 +231,14 @@ export function appendXCallData(
     throw new Error('Only 2 UserOperations are supported');
   }
 
+  if (!builders || !chainHashes || !intentJSONs) {
+    throw new Error('All parameters are required');
+  }
+
+  if (chainHashes.length !== 2 || intentJSONs.length !== 2) {
+    throw new Error('Exactly 2 hashes and 2 intents are required');
+  }
+
   builders.forEach((builder, index) => {
     const currentIntentJSON = ethers.getBytes(intentJSONs[index]);
     const currentHash = chainHashes[index];
@@ -240,7 +248,6 @@ export function appendXCallData(
     const xCallData = encodeCrossChainCallData(currentIntentJSON, currentHash, otherHash, isSourceOp);
 
     builder.setCallData(xCallData);
-    // TODO:: after aggregation signature set
   });
 }
 
