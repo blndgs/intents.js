@@ -1,6 +1,5 @@
 import { UserOperationBuilder } from 'blndgs-userop';
-import { aggregate, isCrossChainOperation } from '../src/crosschain';
-import { encodeCrossChainCallData } from '../src/utils';
+import { aggregate, encodeCrossChainCallData, isCrossChainOperation } from '../src/crosschain';
 import { Asset, Intent, Stake } from 'blndgs-model';
 import {
   amountToBigInt,

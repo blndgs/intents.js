@@ -9,19 +9,17 @@ import {
   VERIFICATION_GAS_LIMIT,
 } from './constants';
 import {
+  appendXCallData,
   hashUserOp,
-  hashCrossChainUserOp,
   sign,
   userOpBuilder,
-  verifyCrossChainSignature,
-  appendXCallData,
 } from './utils';
 import { Client, UserOperationBuilder } from 'blndgs-userop';
 import { FromState, State, ToState } from './index';
 import { Asset, Intent, Loan, Stake } from '.';
 import fetch from 'isomorphic-fetch';
 import { Account } from './Account';
-import { aggregate } from './crosschain';
+import { aggregate, hashCrossChainUserOp, verifyCrossChainSignature } from './crosschain';
 
 /**
  * Facilitates the building and execution of Intent transactions.
