@@ -90,9 +90,13 @@ describe('swap', () => {
    * @param targetToken The token to swap to
    * @param amount The amount to swap
    */
-  const checkAndSwap = async (chainId: number,
-    sourceToken: Token, targetToken: Token,
-    amount: number, recipient?: string) => {
+  const checkAndSwap = async (
+    chainId: number,
+    sourceToken: Token,
+    targetToken: Token,
+    amount: number,
+    recipient?: string,
+  ) => {
     // Initial check for non-positive amount
     if (amount <= 0) {
       console.log(`Skipping ${sourceToken.address} -> ${targetToken.address} due to non-positive amount (${amount})`);
@@ -283,7 +287,7 @@ describe('swap', () => {
         TOKENS[CHAINS.Ethereum].DAI,
         TOKENS[CHAINS.Ethereum].USDC,
         balance,
-        "0x000000000000000000000000000000000000dEaD"
+        '0x000000000000000000000000000000000000dEaD',
       );
     },
     TIMEOUT,

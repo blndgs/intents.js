@@ -47,14 +47,13 @@ export function createChainConfig(rpcUrl: string, bundlerUrl: string): ChainConf
  * @property {string} [recipient] - The address of the recipient for the execution process (optional).
  */
 export interface ExecutionOptions {
-  sourceChainId: number
-  destChainId?: number
-  recipient?: string
+  sourceChainId: number;
+  destChainId?: number;
+  recipient?: string;
 }
 
 /**
- * Constructs the options to allow configurability of
- * non Ballondogs sponspored intents.
+ * Constructs the options to allow configurability of non Ballondogs sponsored intents.
  *
  */
 export interface UserOpOptions {

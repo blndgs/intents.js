@@ -1,5 +1,11 @@
 import { BytesLike, ethers } from 'ethers';
-import { ChainConfig, ExecutionOptions, isUserOpExecutionResponse, UserOpExecutionResponse, UserOpOptions } from './types';
+import {
+  ChainConfig,
+  ExecutionOptions,
+  isUserOpExecutionResponse,
+  UserOpExecutionResponse,
+  UserOpOptions,
+} from './types';
 import {
   CALL_GAS_LIMIT,
   ENTRY_POINT,
@@ -35,7 +41,7 @@ export class IntentBuilder {
   private constructor(
     private _clients: Map<number, Client>,
     private _chainConfigs: Map<number, ChainConfig>,
-  ) { }
+  ) {}
 
   /**
    * Factory method to create an instance of IntentBuilder using chain configurations.
@@ -70,7 +76,7 @@ export class IntentBuilder {
     from: State,
     to: State,
     account: Account,
-    { sourceChainId, destChainId, recipient }: ExecutionOptions
+    { sourceChainId, recipient }: ExecutionOptions,
   ): Promise<UserOpExecutionResponse> {
     if (sourceChainId === undefined || sourceChainId === 0) {
       throw new Error('sourceChainId is null or zero');
@@ -84,9 +90,13 @@ export class IntentBuilder {
 
     const calldata = ethers.toUtf8Bytes(JSON.stringify(intents));
 
-    if (destChainId && destChainId !== sourceChainId) {
-      return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
-    }
+    // TODO:: PR https://github.com/blndgs/intents.js/pull/150 should address cross chain
+    // important checks
+    // 1. aggregated userOps is delegate cross chain call and should call executeCrossChain
+    // 2. when both intent states are `Asset` and src and dest chains are diffrent that is non-delegate cross chain call and should call executeSingleChain
+    // if (destChainId && destChainId !== sourceChainId) {
+    //   return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
+    // }
 
     return this.executeSingleChain(sourceChainId, account, calldata);
   }
