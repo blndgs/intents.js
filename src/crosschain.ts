@@ -32,28 +32,30 @@ export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBui
   }
 
   // Get signature index
-  const signatureEndIdx = getSignatureEndIdx(toBuffer(op.getSignature()));
+  const signature = toBuffer(op.getSignature());
+  const signatureEndIdx = getSignatureEndIdx(signature);
   if (signatureEndIdx === 0) {
     throw new Error('Unsigned UserOperationBuilders are not supported');
   }
 
-  // Check existing packed data from the main userop
-  const existingPackedData = toBuffer(op.getSignature()).slice(signatureEndIdx);
-
   // Get the packed data from embedded op
   const packedData = getPackedData(embeddedOp);
 
-  // idempotency check
-  if (
-    existingPackedData.length === packedData.length + 1 &&
-    existingPackedData[0] === 1 &&
-    Buffer.compare(existingPackedData.slice(1), packedData) === 0
-  ) {
-    return;
+  // Check existing packed data
+  if (signature.length > signatureEndIdx) {
+    const existingPackedData = signature.slice(signatureEndIdx);
+
+    // idempotency check - if already aggregated with same data, return
+    if (existingPackedData.length === packedData.length + 1 &&
+      existingPackedData[0] === 1 &&
+      Buffer.compare(existingPackedData.slice(1), packedData) === 0) {
+      return;
+    }
   }
 
+  // Create new signature with packed data
   const newSignature = Buffer.concat([
-    toBuffer(op.getSignature()).slice(0, signatureEndIdx),
+    signature.slice(0, signatureEndIdx),
     Buffer.from([1]),
     packedData,
   ]);
@@ -64,35 +66,34 @@ export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBui
 function getPackedData(op: UserOperationBuilder): Buffer {
   const buffers: Buffer[] = [];
 
-  //  nonce (32 bytes)
+  // Write nonce (32 bytes)
   const nonceBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getNonce().toString())), 32);
   buffers.push(Buffer.from(nonceBytes));
 
-  //  callGasLimit (8 bytes)
+  // Write gas fields (8 bytes each)
   const callGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getCallGasLimit().toString())), 8);
   buffers.push(Buffer.from(callGasLimitBytes));
 
-  //  preVerificationGas (8 bytes)
-  const preVerificationGasBytes = ethers.zeroPadValue(
-    ethers.toBeArray(BigInt(op.getPreVerificationGas().toString())),
-    8,
-  );
+  const preVerificationGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getPreVerificationGas().toString())), 8);
   buffers.push(Buffer.from(preVerificationGasBytes));
 
-  //  verificationGasLimit (8 bytes)
-  const verificationGasLimitBytes = ethers.zeroPadValue(
-    ethers.toBeArray(BigInt(op.getVerificationGasLimit().toString())),
-    8,
-  );
+  const verificationGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getVerificationGasLimit().toString())), 8);
   buffers.push(Buffer.from(verificationGasLimitBytes));
 
-  // Extract, write hash list from the callData
+  // Write maxFeePerGas (32 bytes)
+  const maxFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getMaxFeePerGas().toString())), 32);
+  buffers.push(Buffer.from(maxFeePerGasBytes));
+
+  // Write maxPriorityFeePerGas (32 bytes)
+  const maxPriorityFeePerGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getMaxPriorityFeePerGas().toString())), 32);
+  buffers.push(Buffer.from(maxPriorityFeePerGasBytes));
+
+  // Extract and write hash list from the callData
   const crossChainData = parseCrossChainData(toBuffer(op.getCallData()));
   const hashListBytes = serializeHashList(crossChainData.hashList);
-
   buffers.push(hashListBytes);
 
-  // include initCode or not
+  // Write initCode if present
   const initCode = toBuffer(op.getInitCode());
   if (initCode.length > 0) {
     buffers.push(initCode);
