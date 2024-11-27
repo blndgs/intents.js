@@ -6,21 +6,22 @@ const CROSS_CHAIN_MARKER = 0xFFFF;
 const MIN_OP_COUNT = 2;
 const MAX_OP_COUNT = 3;
 
+const KernelSignatureLength = 69;
+const SimpleSignatureLength = 65;
+
 function toBuffer(bytes: BytesLike): Buffer {
   return Buffer.from(arrayify(bytes));
 }
 
 /**
  * Aggregates the current UserOperationBuilder with another unsolved cross-chain UserOperationBuilder.
- * 
+ *
  * @param op - The UserOperationBuilder that acts as the source
  * @param embeddedOp - The UserOperationBuilder to embed
  * @returns void
  * @throws Error if validation fails
  */
-export function aggregate(op: UserOperationBuilder,
-  embeddedOp: UserOperationBuilder): void {
-
+export function aggregate(op: UserOperationBuilder, embeddedOp: UserOperationBuilder): void {
   // Validate both main and userop to embed are cross-chain operations
   if (!isCrossChainOperation(op)) {
     throw new Error('Called UserOperationBuilder is not a valid cross-chain userOp');
@@ -43,16 +44,18 @@ export function aggregate(op: UserOperationBuilder,
   const packedData = getPackedData(embeddedOp);
 
   // idempotency check
-  if (existingPackedData.length === packedData.length + 1 &&
+  if (
+    existingPackedData.length === packedData.length + 1 &&
     existingPackedData[0] === 1 &&
-    Buffer.compare(existingPackedData.slice(1), packedData) === 0) {
+    Buffer.compare(existingPackedData.slice(1), packedData) === 0
+  ) {
     return;
   }
 
   const newSignature = Buffer.concat([
     toBuffer(op.getSignature()).slice(0, signatureEndIdx),
     Buffer.from([1]),
-    packedData
+    packedData,
   ]);
 
   op.setSignature(newSignature);
@@ -70,11 +73,17 @@ function getPackedData(op: UserOperationBuilder): Buffer {
   buffers.push(Buffer.from(callGasLimitBytes));
 
   //  preVerificationGas (8 bytes)
-  const preVerificationGasBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getPreVerificationGas().toString())), 8);
+  const preVerificationGasBytes = ethers.zeroPadValue(
+    ethers.toBeArray(BigInt(op.getPreVerificationGas().toString())),
+    8,
+  );
   buffers.push(Buffer.from(preVerificationGasBytes));
 
   //  verificationGasLimit (8 bytes)
-  const verificationGasLimitBytes = ethers.zeroPadValue(ethers.toBeArray(BigInt(op.getVerificationGasLimit().toString())), 8);
+  const verificationGasLimitBytes = ethers.zeroPadValue(
+    ethers.toBeArray(BigInt(op.getVerificationGasLimit().toString())),
+    8,
+  );
   buffers.push(Buffer.from(verificationGasLimitBytes));
 
   // Extract, write hash list from the callData
@@ -92,11 +101,10 @@ function getPackedData(op: UserOperationBuilder): Buffer {
   return Buffer.concat(buffers);
 }
 
-
 /**
- * Checks if a UserOperationBuilder is a cross-chain operation. This validates the 
+ * Checks if a UserOperationBuilder is a cross-chain operation. This validates the
  * callData and signature fields for cross-chain data format from the spec
- * 
+ *
  * @param op - The UserOperationBuilder to check
  * @returns boolean - True if the operation is a cross-chain operation
  */
@@ -110,22 +118,22 @@ export function isCrossChainOperation(op: UserOperationBuilder): boolean {
 
   // If signature exists and has content after the signature end index,
   const signatureEndIdx = getSignatureEndIdx(signature);
-  const isSignatureCrossChain = signature.length > signatureEndIdx &&
-    isCrossChainData(signature.slice(signatureEndIdx), 1, MAX_OP_COUNT);
+  const isSignatureCrossChain =
+    signature.length > signatureEndIdx && isCrossChainData(signature.slice(signatureEndIdx), 1, MAX_OP_COUNT);
 
   return isCallDataCrossChain || isSignatureCrossChain;
 }
 
 /**
  * Checks if the provided data follows the cross-chain data format.
- * 
+ *
  * Cross-chain data format:
  * [2 bytes opType (0xFFFF)]
  * [2 bytes length of intent JSON]
  * [Intent JSON]
  * [1 byte hash list length (N)]
  * [Hash List Entries]
- * 
+ *
  * @param data - The data to check
  * @param minHashListLength - Minimum required length of the hash list
  * @param maxHashListLength - Maximum allowed length of the hash list
@@ -162,13 +170,10 @@ function isCrossChainData(data: Buffer, minHashListLength: number, maxHashListLe
     }
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
-
-const KernelSignatureLength = 69;
-const SimpleSignatureLength = 65;
 
 function getSignatureEndIdx(signature: Buffer): number {
   if (signature.length >= 2 && !(signature[0] === 0x30 && signature[1] === 0x78)) {
@@ -198,15 +203,9 @@ function sigHasKernelPrefix(signature: Buffer): boolean {
     return false;
   }
 
-  const kernelPrefixes = [
-    Buffer.from([0, 0, 0, 0]),
-    Buffer.from([0, 0, 0, 1]),
-    Buffer.from([0, 0, 0, 2])
-  ];
+  const kernelPrefixes = [Buffer.from([0, 0, 0, 0]), Buffer.from([0, 0, 0, 1]), Buffer.from([0, 0, 0, 2])];
 
-  return kernelPrefixes.some(prefix =>
-    signature.subarray(0, 4).equals(prefix)
-  );
+  return kernelPrefixes.some(prefix => signature.subarray(0, 4).equals(prefix));
 }
 
 interface CrossChainHashListEntry {
@@ -241,7 +240,7 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
     throw new Error('Intent JSON is incomplete');
   }
 
-  // Extract 
+  // Extract
   const intentJSON = callData.subarray(offset, offset + intentJSONLength);
   offset += intentJSONLength;
 
@@ -267,7 +266,7 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
     }
 
     const placeholder = callData.readUInt16BE(offset);
-    if (placeholder === 0xFFFF) {
+    if (placeholder === 0xffff) {
       if (foundPlaceholder) {
         throw new Error('Invalid hash list with multiple placeholders');
       }
@@ -299,7 +298,7 @@ function parseCrossChainData(callData: Buffer): CrossChainData {
 
   return {
     intentJSON,
-    hashList
+    hashList,
   };
 }
 
