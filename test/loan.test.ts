@@ -11,11 +11,6 @@ describe('Loan', () => {
         amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
         chainId: toBigInt(CHAINS.Ethereum),
       }),
-      assetWETH = new Asset({
-        address: token.address,
-        amount: amountToBigInt(0.1, token.decimal),
-        chainId: toBigInt(CHAINS.Ethereum),
-      }),
       loanAaveWETH = new Loan({
         address: project,
         asset: token.address,
@@ -23,8 +18,10 @@ describe('Loan', () => {
       });
 
     const initialEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
-    await intentBuilder.execute(assetETH, assetWETH, account, TENDERLY_CHAIN_ID.Ethereum);
-    await intentBuilder.execute(assetWETH, loanAaveWETH, account, TENDERLY_CHAIN_ID.Ethereum);
+
+    await intentBuilder.execute(assetETH, loanAaveWETH, account, {
+      sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+    });
 
     const finalEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);
@@ -43,7 +40,9 @@ describe('Loan', () => {
       });
 
     const initialEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
-    await intentBuilder.execute(assetETH, loanAaveWETH, account, TENDERLY_CHAIN_ID.Ethereum);
+    await intentBuilder.execute(assetETH, loanAaveWETH, account, {
+      sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+    });
 
     const finalEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);

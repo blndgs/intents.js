@@ -1,6 +1,6 @@
 import { IntentBuilder, PROJECTS, CHAINS, Loan, Stake, toBigInt, Account, amountToBigInt } from './src';
 import { ethers } from 'ethers';
-import { ChainConfigs } from './src/types';
+import { ChainConfigs, ExecutionOptions } from './src/types';
 
 const signer = new ethers.Wallet('private key');
 
@@ -9,7 +9,7 @@ const ethAmount = 0.1;
 const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
 
 const from = new Loan({
-  address: PROJECTS.Aave,
+  address: PROJECTS[CHAINS.Ethereum].Aave,
   amount: amountToBigInt(usdtAmount, 18),
   chainId: toBigInt(CHAINS.BNBChain),
   asset: usdtAddress,
@@ -17,7 +17,7 @@ const from = new Loan({
 
 const to = new Stake({
   amount: amountToBigInt(ethAmount, 18),
-  address: PROJECTS.Lido,
+  address: PROJECTS[CHAINS.Ethereum].Lido,
   chainId: toBigInt(CHAINS.Ethereum),
 });
 
@@ -37,7 +37,10 @@ async function executeIntent() {
   const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
 
   try {
-    await intentBuilder.execute(from, to, account, 888);
+    const execOption: ExecutionOptions = {
+      sourceChainId: 888,
+    };
+    await intentBuilder.execute(from, to, account, execOption);
     console.log('Intent executed successfully.');
   } catch (error) {
     console.error('Error executing intent:', error);

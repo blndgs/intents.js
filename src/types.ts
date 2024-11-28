@@ -39,8 +39,21 @@ export function createChainConfig(rpcUrl: string, bundlerUrl: string): ChainConf
 }
 
 /**
- * Constructs the options to allow configurability of
- * non Ballondogs sponspored intents.
+ * Options for configuring the user op execution process .
+ *
+ * @typedef {Object} ExecutionOptions
+ * @property {number} sourceChainId - The ID of the source blockchain where the execution starts.
+ * @property {number} [destChainId] - The ID of the destination blockchain where the execution will be completed (optional).
+ * @property {string} [recipient] - The address of the recipient for the execution process (optional).
+ */
+export interface ExecutionOptions {
+  sourceChainId: number;
+  destChainId?: number;
+  recipient?: string;
+}
+
+/**
+ * Constructs the options to allow configurability of non Ballondogs sponsored intents.
  *
  */
 export interface UserOpOptions {

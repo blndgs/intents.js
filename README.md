@@ -79,7 +79,21 @@ Simply provide the source and destination states along with the associated accou
 The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the BalloonDogs network.
 
 ```typescript
-const solvedHash = await intentBuilder.execute(source, destination, account);
+const solvedHash = await intentBuilder.execute(from, to, account);
+```
+
+#### 4b. Deposit resulting tokens from intent execution into another address
+
+When staking, supplying loan or swapping tokens, you can deposit the
+swapped tokens to be deposited into another address instead of the address
+that executed the tx.
+
+The `execute` takes an optional config object as below
+
+```ts
+const solvedHash = await intentBuilder.execute(source, destination, account, {
+  recipient: '0xAddress',
+});
 ```
 
 ### 5. Fetch the Onchain Transaction Receipt

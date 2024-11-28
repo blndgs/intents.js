@@ -34,7 +34,9 @@ describe('Stake', () => {
         TOKENS[CHAINS.Ethereum].STETH.address,
       );
 
-      await intentBuilder.execute(from, to, account, TENDERLY_CHAIN_ID.Ethereum);
+      await intentBuilder.execute(from, to, account, {
+        sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+      });
 
       const finalDaiBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
       const finalStEthBalance = await account.getBalance(
@@ -70,7 +72,9 @@ describe('Stake', () => {
         TOKENS[CHAINS.Ethereum].AETH.address,
       );
 
-      await intentBuilder.execute(from, to, account, TENDERLY_CHAIN_ID.Ethereum);
+      await intentBuilder.execute(from, to, account, {
+        sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
+      });
 
       const finalETHBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
       const finalAETHBalance = await account.getBalance(
