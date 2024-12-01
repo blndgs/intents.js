@@ -11,7 +11,7 @@
 
 ## Getting Started
 
-You can find the full `intents.js` documentation at [docs.borsa.network](https://docs.borsa.network/solution/sdk)
+You can find the full `intents.js` documentation at [docs.borsa.network](https://docs.borsa.network/developer-guides/intents.js-sdk)
 
 ### 1. Installation
 
