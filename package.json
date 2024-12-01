@@ -41,7 +41,7 @@
   "files": [
     "dist"
   ],
-  "homepage": "https://balloondogs.network/",
+  "homepage": "https://borsa.network/",
   "keywords": [],
   "license": "ISC",
   "main": "./dist/index.js",
