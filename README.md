@@ -11,7 +11,7 @@
 
 ## Getting Started
 
-You can find the full `intents.js` documentation at [docs.balloondogs.network](https://docs.balloondogs.network/solution/sdk)
+You can find the full `intents.js` documentation at [docs.borsa.network](https://docs.borsa.network/solution/sdk)
 
 ### 1. Installation
 
@@ -76,7 +76,7 @@ const to = new Stake({
 
 Simply provide the source and destination states along with the associated account.
 
-The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the BalloonDogs network.
+The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the Borsa network.
 
 ```typescript
 const solvedHash = await intentBuilder.execute(from, to, account);
@@ -125,7 +125,7 @@ The SDK offers several utility functions for managing conversions and amounts:
 
 ## Sending a conventional userOp
 
-The BalloonDogs network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
+The Borsa network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
 
 ```typescript
 await intentBuilder.executeStandardUserOps(account, ChainID, {
