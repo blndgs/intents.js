@@ -25,11 +25,11 @@ async function executeIntent() {
   const chainConfigs: ChainConfigs = {
     1: {
       rpcUrl: 'https://virtual.mainnet.rpc.tenderly.co/13d45a24-2474-431e-8f19-31f251f6cd2a',
-      bundlerUrl: 'https://eth.bundler.dev.balloondogs.network',
+      bundlerUrl: 'https://eth.bundler.dev.borsa.network',
     },
     56: {
       rpcUrl: 'https://virtual.binance.rpc.tenderly.co/4e9d15b6-3c42-43b7-a254-359a7893e8e6',
-      bundlerUrl: 'https://bsc.bundler.dev.balloondogs.network',
+      bundlerUrl: 'https://bsc.bundler.dev.borsa.network',
     },
   };
 

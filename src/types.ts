@@ -53,7 +53,7 @@ export interface ExecutionOptions {
 }
 
 /**
- * Constructs the options to allow configurability of non Ballondogs sponsored intents.
+ * Constructs the options to allow configurability of non Borsa sponsored intents.
  *
  */
 export interface UserOpOptions {

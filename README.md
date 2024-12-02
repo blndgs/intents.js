@@ -32,11 +32,11 @@ import { ethers } from 'ethers';
 const chainConfigs = {
   1: {
     rpcUrl: 'YOUR_ETH_RPC_URL',
-    bundlerUrl: 'https://eth.bundler.balloondogs.network',
+    bundlerUrl: 'https://eth.bundler.borsa.network',
   },
   56: {
     rpcUrl: 'YOUR_BNB_RPC_URL',
-    bundlerUrl: 'https://bsc.bundler.balloondogs.network',
+    bundlerUrl: 'https://bsc.bundler.borsa.network',
   },
 };
 
@@ -91,9 +91,11 @@ that executed the tx.
 The `execute` takes an optional config object as below
 
 ```ts
-const solvedHash = await intentBuilder.execute(source, destination, account, {
+const execOption: ExecutionOptions = {
+  sourceChainId: 888,
   recipient: '0xAddress',
-});
+};
+const solvedHash = await intentBuilder.execute(source, destination, account, execOption);
 ```
 
 ### 5. Fetch the Onchain Transaction Receipt
