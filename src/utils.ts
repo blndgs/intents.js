@@ -3,6 +3,7 @@ import { BytesLike, ethers } from 'ethers';
 import { UserOperationBuilder } from 'blndgs-userop';
 import { ENTRY_POINT } from './constants';
 import { Account } from './Account';
+import { encodeCrossChainCallData } from './crosschain';
 
 /**
  * Converts a number or bigint into a ProtoBigInt, suitable for serialization and transport in network requests.
@@ -186,35 +187,6 @@ export function hashUserOp(chainId: number, builder: UserOperationBuilder): stri
   return ethers.keccak256(encoded);
 }
 
-/**
- * Computes the combined message hash (xChainHash) for cross-chain signing.
- *
- * @param {number[]} chainIDs - An array of chain IDs involved in the cross-chain operation.
- * @param {UserOperationBuilder[]} builders - An array of UserOperationBuilder instances, one for each chain.
- * @returns {string} The computed combined message hash.
- * @throws {Error} If the number of chainIDs doesn't match the number of builders.
- */
-export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperationBuilder[]): string {
-  if (chainIDs.length !== builders.length) {
-    throw new Error('Number of chainIDs and userOps must match');
-  }
-
-  // Compute hashes for each UserOperation
-  const hashes = builders.map((builder, i) => hashUserOp(chainIDs[i], builder));
-
-  // Sort hashes by byte comparison
-  const sortedHashes = hashes.sort((a, b) => {
-    const bufferA = ethers.getBytes(a);
-    const bufferB = ethers.getBytes(b);
-    return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
-  });
-
-  // Concatenate sorted hashes
-  const concatenatedHashes = '0x' + sortedHashes.map(h => h.slice(2)).join('');
-
-  // Compute and return the final hash
-  return ethers.keccak256(concatenatedHashes);
-}
 
 /**
  * Generates the signature for the given message hash using the signer's private key.
@@ -244,39 +216,38 @@ export async function verifySignature(messageHash: string, signature: string, ac
 }
 
 /**
- * Verifies the cross-chain signature.
- * @param builders - UserOperationBuilders.
- * @param chainIDs - Array of chain IDs.
- * @param account - The user's account for signing.
+ * Appends xCallData for cross-chain UserOperations.
+ * @param builders - Array of UserOperationBuilders.
+ * @param entryPoint - Address of the entry point.
+ * @param chainHashes - Array of hashes of the UserOperations.
+ * @param intents - Array of intent JSON objects for the operations.
  */
-export async function verifyCrossChainSignature(
+export function appendXCallData(
   builders: UserOperationBuilder[],
-  chainIDs: number[],
-  account: Account,
-  signature: string,
-): Promise<boolean> {
-  const userOpHash = hashCrossChainUserOp(chainIDs, builders);
-  return verifySignature(userOpHash, signature, account);
-}
+  chainHashes: string[],
+  intentJSONs: BytesLike[],
+): void {
+  if (builders.length !== 2) {
+    throw new Error('Only 2 UserOperations are supported');
+  }
 
-/**
- * Generates and appends xCallData for cross-chain UserOperations.
- */
-export function appendXCallData(builders: UserOperationBuilder[], entryPoint: string, chainHashes: string[]): void {
+  if (!builders || !chainHashes || !intentJSONs) {
+    throw new Error('All parameters are required');
+  }
+
+  if (chainHashes.length !== 2 || intentJSONs.length !== 2) {
+    throw new Error('Exactly 2 hashes and 2 intents are required');
+  }
+
   builders.forEach((builder, index) => {
-    const xCallData = encodeCrossChainCallData(entryPoint, chainHashes[(index + 1) % chainHashes.length]);
+    const currentIntentJSON = ethers.getBytes(intentJSONs[index]);
+    const currentHash = chainHashes[index];
+    const otherHash = chainHashes[(index + 1) % chainHashes.length];
+    const isSourceOp = index === 0;
+
+    const xCallData = encodeCrossChainCallData(currentIntentJSON, currentHash, otherHash, isSourceOp);
+
     builder.setCallData(xCallData);
   });
 }
 
-/**
- * Encodes cross-chain call data for UserOperations.
- * @param entryPoint - Address of the entry point.
- * @param nextHash - Hash of the next operation in the chain.
- * @returns Encoded call data.
- */
-function encodeCrossChainCallData(entryPoint: string, nextHash: string): BytesLike {
-  // Use ethers.js or manual ABI encoding
-  const abi = ethers.AbiCoder.defaultAbiCoder();
-  return abi.encode(['address', 'bytes32'], [entryPoint, nextHash]);
-}
