@@ -42,7 +42,8 @@ export const TOKENS: Record<number, ChainTokens> = {
     DAI: { address: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063', decimal: 18 },
   },
 };
-export const TIMEOUT = 30 * 1000;
+// 40000 ms
+export const TIMEOUT = 40 * 1000;
 
 // custom chain id for tenderly ethereum.
 export const TENDERLY_CHAIN_ID = {

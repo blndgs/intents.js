@@ -11,7 +11,7 @@ export const FACTORY = '0xF097097A6c950927Bdb1cA9e5Cb5f454713861A6';
 /**
  * The user agent for the WAF.
  */
-export const USER_AGENT = 'BallonDogs/1.0';
+export const USER_AGENT = 'Borsa/1.0';
 
 export const PRE_VERIFICATION_GAS = '0x493E0'; // 300,000
 export const MAX_FEE_PER_GAS = '0x493E0'; // 300,000
