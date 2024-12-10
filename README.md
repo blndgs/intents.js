@@ -11,7 +11,7 @@
 
 ## Getting Started
 
-You can find the full `intents.js` documentation at [docs.balloondogs.network](https://docs.balloondogs.network/solution/sdk)
+You can find the full `intents.js` documentation at [docs.borsa.network](https://docs.borsa.network/developer-guides/intents.js-sdk)
 
 ### 1. Installation
 
@@ -32,11 +32,11 @@ import { ethers } from 'ethers';
 const chainConfigs = {
   1: {
     rpcUrl: 'YOUR_ETH_RPC_URL',
-    bundlerUrl: 'https://eth.bundler.balloondogs.network',
+    bundlerUrl: 'https://eth.bundler.borsa.network',
   },
   56: {
     rpcUrl: 'YOUR_BNB_RPC_URL',
-    bundlerUrl: 'https://bsc.bundler.balloondogs.network',
+    bundlerUrl: 'https://bsc.bundler.borsa.network',
   },
 };
 
@@ -76,7 +76,7 @@ const to = new Stake({
 
 Simply provide the source and destination states along with the associated account.
 
-The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the BalloonDogs network.
+The `execute()` function will then wrap the intent as an [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337) userOp and submit it to the Borsa network.
 
 ```typescript
 const solvedHash = await intentBuilder.execute(from, to, account);
@@ -91,9 +91,19 @@ that executed the tx.
 The `execute` takes an optional config object as below
 
 ```ts
-const solvedHash = await intentBuilder.execute(source, destination, account, {
+const execOption: ExecutionOptions = {
+  sourceChainId: 888,
   recipient: '0xAddress',
-});
+};
+const solvedHash = await intentBuilder.execute(source, destination, account, execOption);
+```
+
+#### 4c. Cross chain
+
+```ts
+const crossChainBuilder = await CrossChainBuilder.createInstance(chainConfigs);
+
+const result = await crossChainBuilder.swapCrossChain(source, destination, account, 1, 56);
 ```
 
 ### 5. Fetch the Onchain Transaction Receipt
@@ -125,7 +135,7 @@ The SDK offers several utility functions for managing conversions and amounts:
 
 ## Sending a conventional userOp
 
-The BalloonDogs network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
+The Borsa network is fully compatible with the ERC-4337 standard and can operate as a bundler for standard userOps.
 
 ```typescript
 await intentBuilder.executeStandardUserOps(account, ChainID, {

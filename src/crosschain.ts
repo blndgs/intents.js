@@ -63,10 +63,8 @@ export function hashCrossChainUserOp(chainIDs: number[], builders: UserOperation
     return Buffer.compare(Buffer.from(bufferA), Buffer.from(bufferB));
   });
 
-  // Concatenate sorted hashes as raw bytes
-  const concatenatedHashes = sortedHashes.reduce((acc, hash) => {
-    return new Uint8Array([...acc, ...ethers.getBytes(hash)]);
-  }, new Uint8Array());
+  const buffers = sortedHashes.map(hash => Buffer.from(ethers.getBytes(hash)));
+  const concatenatedHashes = Buffer.concat(buffers);
 
   // Compute the aggregate hash
   return ethers.keccak256(concatenatedHashes);
