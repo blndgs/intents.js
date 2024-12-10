@@ -179,7 +179,7 @@ export class IntentBuilder {
   }
 
   /**
-   * Executes a standard userops without running and solving through Balloondogs.
+   * Executes a standard userops without running and solving through Borsa.
    * @param account The user account performing the transaction.
    * @param chainId the custom chain id for the transaction.
    * (important: though chainId is not required field which will be removed in future, we need it because our test network using custom chain IDs)
