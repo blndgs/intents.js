@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch';
 import { IntentBuilder, Account, CHAINS } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, TOKENS } from './constants';
 import { initSigner, initTest } from './testUtils';
-import { CALL_GAS_LIMIT, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS, VERIFICATION_GAS_LIMIT } from '../src/constants';
+import { CALL_GAS_LIMIT, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS, PRE_VERIFICATION_GAS, VERIFICATION_GAS_LIMIT } from '../src/constants';
 
 async function fundUserWallet(token: string, addr: string, rpcURL: string): Promise<void> {
   const reqBody = JSON.stringify({
@@ -53,6 +53,7 @@ describe('Conventional userops ethereum', () => {
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
         verificationGasLimit: VERIFICATION_GAS_LIMIT,
+        preVerificationGas: PRE_VERIFICATION_GAS
       });
 
       const finalETHBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
@@ -91,6 +92,7 @@ describe('Conventional userops binance', () => {
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
         verificationGasLimit: VERIFICATION_GAS_LIMIT,
+        preVerificationGas: PRE_VERIFICATION_GAS
       });
 
       const finalBNBBalance = await account.getBalance(TENDERLY_CHAIN_ID.BNBChain, TOKENS[CHAINS.BNBChain].BNB.address);
@@ -126,6 +128,7 @@ describe('Conventional userops polygon', () => {
         maxFeePerGas: MAX_FEE_PER_GAS,
         maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
         verificationGasLimit: VERIFICATION_GAS_LIMIT,
+        preVerificationGas: PRE_VERIFICATION_GAS
       });
 
       const finalPOLBalance = await account.getBalance(TENDERLY_CHAIN_ID.Polygon, TOKENS[CHAINS.Polygon].POL.address);
