@@ -62,7 +62,10 @@ export interface UserOpOptions {
   maxPriorityFeePerGas: string;
   verificationGasLimit?: string;
   callGasLimit: string;
+  preVerificationGas: string,
 }
+
+export type GasOptions = Omit<UserOpOptions, 'calldata'>
 
 export interface UserOpExecutionResponse {
   userOpHash: {

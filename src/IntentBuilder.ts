@@ -26,7 +26,7 @@ import { Asset, Intent, Loan, Stake } from '.';
 import fetch from 'isomorphic-fetch';
 import { Account } from './Account';
 import { aggregate, hashCrossChainUserOp, verifyCrossChainSignature } from './crosschain';
-import { getDefaultSameChainGas } from './gas';
+import { getCrossChainGas, getDefaultSameChainGas } from './gas';
 
 /**
  * Facilitates the building and execution of Intent transactions.
@@ -145,8 +145,13 @@ export class IntentBuilder {
     calldata: BytesLike,
   ): Promise<UserOpExecutionResponse> {
     // Step 1: Create UserOperationBuilders for source and destination chains
-    const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata);
-    const destBuilder = await this.createUserOpBuilder(destChainId, account, calldata);
+
+    const sourceGasOptions = await getCrossChainGas(account.getProvider(sourceChainId))
+    const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata, sourceGasOptions)
+
+    const destGasOptions = await getCrossChainGas(account.getProvider(destChainId))
+    const destBuilder = await this.createUserOpBuilder(destChainId, account, calldata, destGasOptions);
+
     const builders = [sourceBuilder, destBuilder];
     const chainIDs = [sourceChainId, destChainId];
 
@@ -270,7 +275,7 @@ export class IntentBuilder {
       maxPriorityFeePerGas: opts?.maxPriorityFeePerGas ?? MAX_PRIORITY_FEE_PER_GAS,
       verificationGasLimit: opts?.verificationGasLimit ?? VERIFICATION_GAS_LIMIT,
       callGasLimit: opts?.callGasLimit ?? CALL_GAS_LIMIT,
-      preVerificationGas: PRE_VERIFICATION_GAS,
+      preVerificationGas: opts?.preVerificationGas ?? PRE_VERIFICATION_GAS,
       maxFeePerGas: opts?.maxFeePerGas ?? MAX_FEE_PER_GAS,
     });
   }
