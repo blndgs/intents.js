@@ -26,6 +26,7 @@ import { Asset, Intent, Loan, Stake } from '.';
 import fetch from 'isomorphic-fetch';
 import { Account } from './Account';
 import { aggregate, hashCrossChainUserOp, verifyCrossChainSignature } from './crosschain';
+import { getDefaultSameChainGas } from './gas';
 
 /**
  * Facilitates the building and execution of Intent transactions.
@@ -74,7 +75,7 @@ export class IntentBuilder {
     from: State,
     to: State,
     account: Account,
-    { sourceChainId, recipient }: ExecutionOptions,
+    { sourceChainId, destChainId, recipient }: ExecutionOptions,
   ): Promise<UserOpExecutionResponse> {
     if (sourceChainId === undefined || sourceChainId === 0) {
       throw new Error('sourceChainId is null or zero');
@@ -92,11 +93,12 @@ export class IntentBuilder {
     // important checks
     // 1. aggregated userOps is delegate cross chain call and should call executeCrossChain
     // 2. when both intent states are `Asset` and src and dest chains are diffrent that is non-delegate cross chain call and should call executeSingleChain
-    // if (destChainId && destChainId !== sourceChainId) {
-    //   return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
-    // }
+    if (destChainId && destChainId !== sourceChainId) {
+      return this.executeCrossChain(sourceChainId, destChainId, account, calldata);
+    }
 
-    return this.executeSingleChain(sourceChainId, account, calldata);
+    return this.executeSingleChain(sourceChainId, account,
+      calldata, getDefaultSameChainGas());
   }
 
   /**
@@ -250,7 +252,7 @@ export class IntentBuilder {
   }
 
   /**
-   * Creates a UserOperationBuilder instance with the specified parameters.
+   * Create
    * @param chainId The chain ID for the UserOperation.
    * @param account The user account associated with the UserOperation.
    * @param calldata The calldata for the UserOperation.
