@@ -101,10 +101,11 @@ const solvedHash = await intentBuilder.execute(source, destination, account, exe
 #### 4c. Cross chain
 
 ```ts
+import { CrossChainBuilder } from 'intents.js';
+
 const crossChainBuilder = await CrossChainBuilder.createInstance(chainConfigs);
 
 const result = await crossChainBuilder.swapCrossChain(source, destination, account, 1, 56);
-});
 ```
 
 ### 5. Fetch the Onchain Transaction Receipt
