@@ -38,6 +38,10 @@ const chainConfigs = {
     rpcUrl: 'YOUR_BNB_RPC_URL',
     bundlerUrl: 'https://bsc.bundler.borsa.network',
   },
+  137: {
+    rpcUrl: 'YOUR_POLYGON_RPC_URL',
+    bundlerUrl: 'https://polygon.bundler.borsa.network',
+  },
 };
 
 const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
