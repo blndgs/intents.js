@@ -146,7 +146,7 @@ export class IntentBuilder {
   ): Promise<UserOpExecutionResponse> {
     // Step 1: Create UserOperationBuilders for source and destination chains
 
-    const sourceGasOptions = await getCrossChainGas(account.getProvider(sourceChainId))
+    const sourceGasOptions = getDefaultSameChainGas()
     const sourceBuilder = await this.createUserOpBuilder(sourceChainId, account, calldata, sourceGasOptions)
 
     const destGasOptions = await getCrossChainGas(account.getProvider(destChainId))
