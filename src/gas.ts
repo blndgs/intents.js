@@ -15,10 +15,9 @@ export const getDefaultSameChainGas = (): GasOptions => {
 export const getCrossChainGas = async (
   provider: JsonRpcProvider,
 ): Promise<GasOptions> => {
-  const [maxFeePerGas, maxPriorityFee] = await Promise.all([
-    getMaxFeePerGas(provider),
-    getMaxPriorityFee(provider)
-  ]);
+  // Get priority fee first since we need it for both returns
+  const maxPriorityFee = await getMaxPriorityFee(provider);
+  const maxFeePerGas = await getMaxFeePerGas(provider, maxPriorityFee);
 
   return {
     maxFeePerGas: maxFeePerGas.toString(),
@@ -39,7 +38,10 @@ async function getMaxPriorityFee(provider: ethers.JsonRpcProvider): Promise<bigi
   }
 }
 
-async function getMaxFeePerGas(provider: ethers.JsonRpcProvider): Promise<bigint> {
+async function getMaxFeePerGas(
+  provider: ethers.JsonRpcProvider,
+  priorityFeePerGas: bigint
+): Promise<bigint> {
   try {
     const feeHistory = await provider.send("eth_feeHistory", [
       "0x1", // Last block only
@@ -48,10 +50,10 @@ async function getMaxFeePerGas(provider: ethers.JsonRpcProvider): Promise<bigint
     ]);
 
     const baseFeePerGas = getBigInt(feeHistory.baseFeePerGas[0]);
-    const priorityFeePerGas = getBigInt(feeHistory.reward[0][0]);
 
-    // Estimate maxFeePerGas
-    const maxFeePerGas = baseFeePerGas + priorityFeePerGas;
+    // Estimate maxFeePerGas: base fee + priority fee
+    // Add 20% buffer to base fee to account for base fee variations
+    const maxFeePerGas = (baseFeePerGas * BigInt(120) / BigInt(100)) + priorityFeePerGas;
     return maxFeePerGas;
   } catch (error) {
     console.error("Error fetching maxFeePerGas:", error);
