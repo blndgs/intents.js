@@ -6,9 +6,9 @@ export const getDefaultSameChainGas = (): GasOptions => {
   return {
     maxFeePerGas: "0",
     maxPriorityFeePerGas: "0",
-    verificationGasLimit: "1500000",
     callGasLimit: "1500000",
-    preVerificationGas: "90000"
+    verificationGasLimit: "120000",
+    preVerificationGas: "50000"
   }
 }
 
@@ -22,9 +22,9 @@ export const getCrossChainGas = async (
   return {
     maxFeePerGas: maxFeePerGas.toString(),
     maxPriorityFeePerGas: maxPriorityFee.toString(),
-    verificationGasLimit: "1500000",
     callGasLimit: "1500000",
-    preVerificationGas: "90000"
+    verificationGasLimit: "120000",
+    preVerificationGas: "50000"
   };
 }
 
