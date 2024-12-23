@@ -67,7 +67,7 @@ const web3Auth = new Web3Auth({
 
 const web3authProvider = await web3Auth.connectWith('google');
 
-const ethersProvider = new ethers.providers.Web3Provider(web3authProvider as any);
+const ethersProvider = new ethers.BrowserProvider(web3authProvider as any);
 const web3AuthSigner = ethersProvider.getSigner();
 
 const accountInstance = await Account.createInstance(web3AuthSigner, chainConfigs);
