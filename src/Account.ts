@@ -1,4 +1,4 @@
-import { ethers, JsonRpcProvider } from 'ethers';
+import { ethers, JsonRpcProvider, Signer } from 'ethers';
 import { ENTRY_POINT, FACTORY, USER_AGENT } from './constants';
 import { Presets } from 'blndgs-userop';
 import { tokenToFloat, weiToFloat } from './utils';
@@ -11,7 +11,7 @@ export class Account {
    * Private constructor to enforce the use of factory methods for instantiation.
    * @param signer The ethers Signer used for transaction signing.
    */
-  private constructor(public signer: ethers.Signer) {}
+  private constructor(public signer: Signer) { }
 
   /**
    * Creates an instance of the Account class with associated chain configurations.
@@ -20,7 +20,10 @@ export class Account {
    * @param chainConfigs Configuration mapping chain IDs to their configurations.
    * @returns A new instance of the Account class populated with sender addresses and providers per chain.
    */
-  static async createInstance(signer: ethers.Signer, chainConfigs: ChainConfigs): Promise<Account> {
+  static async createInstance(
+    signer: Signer,
+    chainConfigs: ChainConfigs
+  ): Promise<Account> {
     const account = new Account(signer);
     await Promise.all(
       Object.entries(chainConfigs).map(async ([chainId, config]) => {
@@ -40,7 +43,11 @@ export class Account {
    * @param factory Optional factory address to interact with when generating the sender.
    * @returns The Ethereum address as a string.
    */
-  static async getSender(signer: ethers.Signer, bundlerUrl: string, salt: number = 0): Promise<string> {
+  static async getSender(
+    signer: Signer,
+    bundlerUrl: string,
+    salt: number = 0
+  ): Promise<string> {
     // Convert salt to a number, then to a hex string
     const simpleAccount = await Presets.Builder.SimpleAccount.init(signer, bundlerUrl, USER_AGENT, {
       factory: FACTORY,
