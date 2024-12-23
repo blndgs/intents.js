@@ -23,7 +23,9 @@ npm install intents.js
 
 ### 2. Setup
 
-Begin by importing `intents.js` and setting up the `Account` and `IntentBuilder`:
+You can set up `intents.js` using either a private key or Web3Auth for authentication:
+
+#### Option 1: Using Private Key
 
 ```typescript
 import { Account, IntentBuilder, PROJECTS, CHAINS, toBigInt, amountToBigInt, Asset, Stake } from 'intents.js';
@@ -45,11 +47,43 @@ const chainConfigs = {
 };
 
 const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
-
 const signer = new ethers.Wallet('your private key');
-
 const account = await Account.createInstance(signer, chainConfigs);
 ```
+
+#### Option 2: Using Web3Auth
+
+```typescript
+import { Web3Auth } from '@web3auth/web3auth';
+import { Account, IntentBuilder } from 'intents.js';
+
+const web3Auth = new Web3Auth({
+  clientId: 'YOUR_WEB3AUTH_CLIENT_ID', // Replace with your client ID
+  chainConfig: {
+    chainId: '0x1', // Ethereum Mainnet
+    rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID',
+  },
+});
+
+const web3authProvider = await web3Auth.connectWith('google');
+
+const ethersProvider = new ethers.providers.Web3Provider(web3authProvider as any);
+const web3AuthSigner = ethersProvider.getSigner();
+
+const accountInstance = await Account.createInstance(web3AuthSigner, chainConfigs);
+
+const chainConfigs = {
+  1: {
+    rpcUrl: 'YOUR_ETH_RPC_URL',
+    bundlerUrl: 'https://eth.bundler.borsa.network',
+  },
+};
+
+const intentBuilder = await IntentBuilder.createInstance(chainConfigs);
+const account = await Account.createInstance(web3AuthSigner, chainConfigs);
+```
+
+> You can extend this to use any other provider with ethers and this sdk too
 
 ### 3. Create an Intent
 
@@ -59,7 +93,7 @@ In this example, we are using funds from AAVE (BNB Chain) to stake on Lido (Ethe
 
 ```typescript
 const usdtAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7';
-const ethtAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+const ethAddress = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 const from = new Loan({
   address: PROJECTS.Aave,
@@ -88,13 +122,11 @@ const solvedHash = await intentBuilder.execute(from, to, account);
 
 #### 4b. Deposit resulting tokens from intent execution into another address
 
-When staking, supplying loan or swapping tokens, you can deposit the
-swapped tokens to be deposited into another address instead of the address
-that executed the tx.
+When staking, supplying loan or swapping tokens, you can deposit the swapped tokens to be deposited into another address instead of the address that executed the tx.
 
 The `execute` takes an optional config object as below
 
-```ts
+```typescript
 const execOption: ExecutionOptions = {
   sourceChainId: 888,
   recipient: '0xAddress',
@@ -104,7 +136,7 @@ const solvedHash = await intentBuilder.execute(source, destination, account, exe
 
 #### 4c. Cross chain
 
-```ts
+```typescript
 import { CrossChainBuilder } from 'intents.js';
 
 const crossChainBuilder = await CrossChainBuilder.createInstance(chainConfigs);
