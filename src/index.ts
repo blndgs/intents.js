@@ -24,4 +24,5 @@ export * from './projects';
 export * from './IntentBuilder';
 export * from './Account';
 export * from './utils';
+export * from './CrossChainBuilder';
 export { Intent, Asset, Loan, Stake, PartialMessage, State, FromState, ToState };
