@@ -11,7 +11,7 @@ export class Account {
    * Private constructor to enforce the use of factory methods for instantiation.
    * @param signer The ethers Signer used for transaction signing.
    */
-  private constructor(public signer: ethers.Signer) {}
+  private constructor(public signer: ethers.Signer) { }
 
   /**
    * Creates an instance of the Account class with associated chain configurations.
