@@ -5,6 +5,7 @@ import {
   isUserOpExecutionResponse,
   UserOpExecutionResponse,
   UserOpOptions,
+  UserOperationReceipt,
 } from './types';
 import {
   CALL_GAS_LIMIT,
@@ -286,7 +287,7 @@ export class IntentBuilder {
    * @param solvedHash The hash of the transaction.
    * @returns A promise that resolves to the transaction receipt.
    */
-  public async getReceipt(chainId: number, solvedHash: string) {
+  public async getReceipt(chainId: number, solvedHash: string): Promise<UserOperationReceipt> {
     const config = this._chainConfigs.get(chainId);
     if (!config) {
       throw new Error(`Chain configuration for chain ID ${chainId} not found`);
