@@ -98,3 +98,60 @@ export function isUserOpExecutionResponse(obj: unknown): obj is UserOpExecutionR
     typeof userOpHash.trx === 'string'
   );
 }
+
+/**
+ * Represents a log entry in an Ethereum transaction receipt
+ */
+export interface Log {
+  address: string;
+  topics: string[];
+  data: string;
+  blockNumber: string;
+  transactionHash: string;
+  transactionIndex: string;
+  blockHash: string;
+  logIndex: string;
+  removed: boolean;
+}
+
+/**
+ * Represents a transaction receipt from the blockchain
+ */
+export interface TransactionReceipt {
+  blockHash: string;
+  blockNumber: string;
+  from: string;
+  cumulativeGasUsed: string;
+  gasUsed: string;
+  logs: Log[];
+  logsBloom: string;
+  transactionHash: string;
+  transactionIndex: string;
+  effectiveGasPrice: string;
+}
+
+/**
+ * Represents the result of a user operation receipt
+ */
+export interface UserOperationReceiptResult {
+  userOpHash: string;
+  sender: string;
+  paymaster: string;
+  nonce: string;
+  success: boolean;
+  actualGasCost: string;
+  actualGasUsed: string;
+  from: string;
+  receipt: TransactionReceipt;
+  logs: Log[];
+  reason: string;
+}
+
+/**
+ * Represents the complete JSON-RPC response for a user operation receipt
+ */
+export interface UserOperationReceipt {
+  id: number;
+  jsonrpc: string;
+  result: UserOperationReceiptResult;
+}
