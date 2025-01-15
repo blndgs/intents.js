@@ -1,11 +1,10 @@
-import { IntentBuilder, CHAINS, toBigInt, Asset, Account, floatToToken, weiToFloat, amountToBigInt } from '../src';
-import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { getPrice, initSigner, initTest } from './testUtils';
+import { IntentBuilder, CHAINS, toBigInt, Asset, Account, amountToBigInt } from '../src';
+import { TENDERLY_CHAIN_ID, TIMEOUT } from './constants';
+import { initSigner, initTest } from './testUtils';
 
 describe('crosschain swap', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
-  // Initialize test environment
   beforeAll(async () => {
     const chainConfigs = await initTest();
     ({ account, intentBuilder } = await initSigner(chainConfigs));
@@ -22,13 +21,11 @@ describe('crosschain swap', () => {
         chainId: toBigInt(CHAINS.Ethereum),
       });
 
-      // Create 'to' asset using amountToBigInt for precise conversion
       const to = new Asset({
         address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         chainId: toBigInt(CHAINS.BNBChain),
       });
 
-      // Execute swap
       try {
         await intentBuilder.execute(from, to, account, {
           sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
@@ -51,13 +48,11 @@ describe('crosschain swap', () => {
         chainId: toBigInt(CHAINS.Ethereum),
       });
 
-      // Create 'to' asset using amountToBigInt for precise conversion
       const to = new Asset({
         address: "0x55d398326f99059fF775485246999027B3197955",
         chainId: toBigInt(CHAINS.BNBChain),
       });
 
-      // Execute swap
       try {
         await intentBuilder.execute(from, to, account, {
           sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
