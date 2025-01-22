@@ -35,7 +35,6 @@ describe('crosschain swap', () => {
       }
 
     },
-    TIMEOUT * 3,
   );
 
   it(
@@ -62,6 +61,5 @@ describe('crosschain swap', () => {
       }
 
     },
-    TIMEOUT * 3,
   );
 });

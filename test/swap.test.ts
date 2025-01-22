@@ -1,6 +1,9 @@
 import { IntentBuilder, CHAINS, toBigInt, Asset, Account, floatToToken, weiToFloat, amountToBigInt } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { getPrice, initSigner, initTest } from './testUtils';
+import { sleep, getPrice, initSigner, initTest } from './testUtils';
+import failOnConsole from 'jest-fail-on-console'
+
+failOnConsole()
 
 /** Maximum allowed slippage for swaps (2%) */
 const DEFAULT_SLIPPAGE = 0.02;
@@ -79,14 +82,22 @@ describe('swap', () => {
 
     // Execute swap
     try {
-      await intentBuilder.execute(from, to, account, {
+      const result = await intentBuilder.execute(from, to, account, {
         sourceChainId: chainId,
         recipient,
       });
+
+      await sleep(3000)
+
+      const receipt = await intentBuilder.getReceipt(TENDERLY_CHAIN_ID.Ethereum, result.userOpHash.solved_hash);
+
+      expect(receipt.result.reason).toBe("PROCESSING_STATUS_ON_CHAIN")
+
     } catch (error) {
       console.error(`Swap failed: ${error}`);
     }
   };
+
 
   /**
    * Checks balance and executes swap if conditions are met.

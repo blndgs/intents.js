@@ -131,7 +131,7 @@ const execOption: ExecutionOptions = {
   sourceChainId: 888,
   recipient: '0xAddress',
 };
-const solvedHash = await intentBuilder.execute(source, destination, account, execOption);
+const result = await intentBuilder.execute(source, destination, account, execOption);
 ```
 
 #### 4c. Cross chain
@@ -149,9 +149,11 @@ const result = await crossChainBuilder.swapCrossChain(source, destination, accou
 After the transaction is executed, you can fetch the receipt:
 
 ```typescript
-const receipt = await intentBuilder.getReceipt(1, solvedHash);
+const receipt = await intentBuilder.getReceipt(1, result.userOpHash.solved_hash);
 
 const txHash = receipt.result.receipt.transactionHash;
+
+console.log(receipt.result.reason); // PROCESSING_STATUS_ON_CHAIN
 
 console.log(
   `View your tx onchain using any explorer:

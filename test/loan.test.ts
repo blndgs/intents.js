@@ -1,16 +1,16 @@
 import { Asset, Loan, CHAINS, IntentBuilder, PROJECTS, toBigInt, Account, amountToBigInt } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { initSigner, initTest } from './testUtils';
+import { initSigner, initTest, sleep } from './testUtils';
 
 describe('Loan', () => {
   let intentBuilder: IntentBuilder, account: Account;
 
   const loanWETH = async function (project: string, token: Token) {
     const assetETH = new Asset({
-        address: TOKENS[CHAINS.Ethereum].ETH.address,
-        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-        chainId: toBigInt(CHAINS.Ethereum),
-      }),
+      address: TOKENS[CHAINS.Ethereum].ETH.address,
+      amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+      chainId: toBigInt(CHAINS.Ethereum),
+    }),
       loanAaveWETH = new Loan({
         address: project,
         asset: token.address,
@@ -19,20 +19,26 @@ describe('Loan', () => {
 
     const initialEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
 
-    await intentBuilder.execute(assetETH, loanAaveWETH, account, {
+    const result = await intentBuilder.execute(assetETH, loanAaveWETH, account, {
       sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
     });
 
     const finalEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);
+
+    await sleep(3000)
+
+    const receipt = await intentBuilder.getReceipt(TENDERLY_CHAIN_ID.Ethereum, result.userOpHash.solved_hash);
+
+    expect(receipt.result.reason).toBe("PROCESSING_STATUS_ON_CHAIN")
   };
 
   const ethToLoanWEth = async function (project: string, token: Token) {
     const assetETH = new Asset({
-        address: TOKENS[CHAINS.Ethereum].ETH.address,
-        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-        chainId: toBigInt(CHAINS.Ethereum),
-      }),
+      address: TOKENS[CHAINS.Ethereum].ETH.address,
+      amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+      chainId: toBigInt(CHAINS.Ethereum),
+    }),
       loanAaveWETH = new Loan({
         address: project,
         asset: token.address,
@@ -40,12 +46,18 @@ describe('Loan', () => {
       });
 
     const initialEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
-    await intentBuilder.execute(assetETH, loanAaveWETH, account, {
+    const result = await intentBuilder.execute(assetETH, loanAaveWETH, account, {
       sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
     });
 
     const finalEthBalance = await account.getBalance(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH.address);
     expect(finalEthBalance).toBeLessThan(initialEthBalance);
+
+    await sleep(3000)
+
+    const receipt = await intentBuilder.getReceipt(TENDERLY_CHAIN_ID.Ethereum, result.userOpHash.solved_hash);
+
+    expect(receipt.result.reason).toBe("PROCESSING_STATUS_ON_CHAIN")
   };
 
   beforeAll(async () => {

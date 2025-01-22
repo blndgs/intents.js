@@ -81,3 +81,5 @@ export async function getPrice(
 ): Promise<bigint> {
   return quoter.getQuote(chainId, sourceToken, targetToken, amount, sender, nonce);
 }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
