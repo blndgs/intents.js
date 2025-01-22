@@ -67,8 +67,6 @@ export class BorsaQuoter {
       }
     };
 
-    console.log(JSON.stringify(request))
-
     const response = await fetch(`${this.baseUrl}/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
