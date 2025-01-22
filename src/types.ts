@@ -155,3 +155,4 @@ export interface UserOperationReceipt {
   jsonrpc: string;
   result: UserOperationReceiptResult;
 }
+

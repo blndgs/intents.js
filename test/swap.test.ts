@@ -47,12 +47,16 @@ describe('swap', () => {
       chainId: toBigInt(CHAINS.Ethereum),
     });
 
+    const sender = account.getSender(chainId)
+
     // Get expected amount and calculate minimum amount with slippage
     const expectedTargetAmount = await getPrice(
       CHAINS.Ethereum,
       sourceToken,
       targetToken,
-      floatToToken(bufferedAmount, sourceToken.decimal),
+      amountToBigInt(bufferedAmount, sourceToken.decimal),
+      sender,
+      Number(await account.getERC4337Nonce(chainId, sender)),
     );
     const minTargetAmount = (expectedTargetAmount * BigInt(Math.floor((1 - slippage) * 10000))) / BigInt(10000);
 
@@ -62,7 +66,7 @@ describe('swap', () => {
     console.log('sourceAmount', bufferedAmount);
     console.log('expectedTargetAmount', weiToFloat(expectedTargetAmount));
     console.log('minTargetAmount', weiToFloat(minTargetAmount));
-    console.log('sender', account.getSender(chainId));
+    console.log('sender', sender);
     console.log('source balance', await account.getBalance(chainId, sourceToken.address));
     console.log('targetToken balance', await account.getBalance(chainId, targetToken.address));
 
@@ -117,12 +121,16 @@ describe('swap', () => {
       return;
     }
 
+    const sender = account.getSender(chainId);
+
     // Get expected amount
     const expectedTargetAmount = await getPrice(
       CHAINS.Ethereum,
       sourceToken,
       targetToken,
-      floatToToken(bufferedAmount, sourceToken.decimal),
+      amountToBigInt(bufferedAmount, sourceToken.decimal),
+      sender,
+      Number(await account.getERC4337Nonce(chainId, sender)),
     );
 
     // Check if expected amount is zero or very close to zero
@@ -130,6 +138,7 @@ describe('swap', () => {
       console.log(
         `Skipping ${sourceToken.address} -> ${targetToken.address} due to zero or very small expected target amount`,
       );
+      console.log(expectedTargetAmount, MINIMUM_SWAP_AMOUNT)
       return;
     }
 
@@ -145,7 +154,6 @@ describe('swap', () => {
   beforeAll(async () => {
     const chainConfigs = await initTest();
     ({ account, intentBuilder } = await initSigner(chainConfigs));
-    await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
 
   it(
@@ -188,7 +196,7 @@ describe('swap', () => {
   it(
     'ETH->LINK',
     async () =>
-      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].LINK, 0.1),
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].LINK, 1),
     TIMEOUT,
   );
 
