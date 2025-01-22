@@ -213,7 +213,7 @@ describe('swap', () => {
   it(
     'ETH->LINK',
     async () =>
-      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].LINK, 1),
+      await checkAndSwap(TENDERLY_CHAIN_ID.Ethereum, TOKENS[CHAINS.Ethereum].ETH, TOKENS[CHAINS.Ethereum].LINK, 0.1),
     TIMEOUT,
   );
 
