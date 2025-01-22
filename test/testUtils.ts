@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 import { BigInt as ProtoBigInt } from 'blndgs-model';
 import { Account, IntentBuilder } from '../src';
-import Moralis from 'moralis';
 import { TENDERLY_CHAIN_ID, Token } from './constants';
 import dotenv from 'dotenv';
 import { ChainConfigs } from '../src/types';
