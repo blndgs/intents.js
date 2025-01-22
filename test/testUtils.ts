@@ -8,15 +8,6 @@ import { ChainConfigs } from '../src/types';
 import { BorsaQuoter } from '../test/quoter';
 
 dotenv.config();
-const moralis_key = process.env.MORALIS_API_KEY;
-let isMoralisInitialized = false;
-
-export async function initializeMoralis() {
-  if (!isMoralisInitialized) {
-    await Moralis.start({ apiKey: moralis_key });
-    isMoralisInitialized = true;
-  }
-}
 
 export function generateRandomAccount(): ethers.Wallet {
   const randomBytes = ethers.randomBytes(32);
@@ -34,7 +25,6 @@ export async function initTest(): Promise<ChainConfigs> {
   if (!process.env.POL_BUNDLER_URL) throw new Error('POL_BUNDLER_URL is missing');
   if (!process.env.POL_NODE_URL) throw new Error('POL_NODE_URL is missing');
   if (!process.env.POL_CHAIN_ID) throw new Error('POL_CHAIN_ID is missing');
-  if (!process.env.MORALIS_API_KEY) throw new Error('MORALIS_API_KEY is missing');
   if (!process.env.QUOTE_API) throw new Error('QUOTE_API is missing');
 
   const chainConfigs: ChainConfigs = {
@@ -56,8 +46,6 @@ export async function initTest(): Promise<ChainConfigs> {
 
 export async function initSigner(chainConfigs: ChainConfigs) {
   const signer = generateRandomAccount();
-
-  await initializeMoralis();
 
   const account = await Account.createInstance(signer, chainConfigs)
 
