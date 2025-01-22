@@ -22,17 +22,35 @@ export interface BorsaQuoteRequest {
   };
 }
 
+
+interface OperationDetails {
+  amount?: string;
+  from?: string;
+  to?: string;
+  spender?: string;
+  amount_in?: string;
+  amount_out?: string;
+  estimated_gas?: number;
+  expected_slippage?: string;
+  min_amount_out?: string;
+  provider?: string;
+  token_in?: string;
+  token_out?: string;
+}
+
+interface Step {
+  name: string;
+  operation_details: OperationDetails;
+}
+
 /**
  * Represents a response from the Borsa Network API
  */
-export interface BorsaQuoteResponse {
-  steps: {
-    name: string;
-    operation_details: {
-      amount_in?: string;
-      amount_out?: string;
-    };
-  }[];
+interface BorsaQuoteResponse {
+  id: string;
+  intent_type: string;
+  sub_type: string;
+  steps: Step[];
 }
 
 export class BorsaQuoter {
@@ -52,7 +70,7 @@ export class BorsaQuoter {
   ): Promise<bigint> {
     const request: BorsaQuoteRequest = {
       sender: sender,
-      nonce: nonce === 0 ? 1 : nonce,
+      nonce,
       intent: {
         fromAsset: {
           address: sourceToken.address,

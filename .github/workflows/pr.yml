@@ -49,7 +49,6 @@ jobs:
           echo "POL_BUNDLER_URL=${{ vars.TESTNET_POL_BUNDLER_URL }}" >> $GITHUB_ENV
           echo "POL_NODE_URL=${{ vars.TESTNET_POL_NODE_URL }}" >> $GITHUB_ENV
           echo "POL_CHAIN_ID=${{ vars.TESTNET_POL_CHAIN_ID }}" >> $GITHUB_ENV
-          echo "MORALIS_API_KEY=${{ secrets.MORALIS_API_KEY }}" >> $GITHUB_ENV
           echo "QUOTE_API=${{ vars.QUOTE_API }}" >> $GITHUB_ENV
 
       - name: Run Prettier
