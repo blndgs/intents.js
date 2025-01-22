@@ -1,4 +1,4 @@
-import { ethers, JsonRpcProvider } from 'ethers';
+import { ethers } from 'ethers';
 import { BigInt as ProtoBigInt } from 'blndgs-model';
 import { Account, IntentBuilder } from '../src';
 import Moralis from 'moralis';

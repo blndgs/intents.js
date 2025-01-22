@@ -5,6 +5,12 @@ import failOnConsole from 'jest-fail-on-console'
 
 failOnConsole()
 
+describe("float to token", () => {
+  it("converts", () => {
+    expect(floatToToken(1, 6)).toBe(BigInt(1000000))
+  })
+})
+
 /** Maximum allowed slippage for swaps (2%) */
 const DEFAULT_SLIPPAGE = 0.02;
 
