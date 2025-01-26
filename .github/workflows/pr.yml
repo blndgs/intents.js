@@ -10,7 +10,7 @@ on:
   schedule:
     ## run at 12 pm (UTC) every day
     ## same time we run the e2etests on the Go side too
-    - cron: '0 12 * * *'
+    - cron: "0 12 * * *"
 
 jobs:
   test:
@@ -24,7 +24,7 @@ jobs:
       - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20.x"
 
       - name: Install Node
         run: npm i -f
@@ -49,7 +49,7 @@ jobs:
           echo "POL_BUNDLER_URL=${{ vars.TESTNET_POL_BUNDLER_URL }}" >> $GITHUB_ENV
           echo "POL_NODE_URL=${{ vars.TESTNET_POL_NODE_URL }}" >> $GITHUB_ENV
           echo "POL_CHAIN_ID=${{ vars.TESTNET_POL_CHAIN_ID }}" >> $GITHUB_ENV
-          echo "MORALIS_API_KEY=${{ secrets.MORALIS_API_KEY }}" >> $GITHUB_ENV
+          echo "QUOTE_API=${{ vars.QUOTE_API }}" >> $GITHUB_ENV
 
       - name: Run Prettier
         run: npx prettier --write .

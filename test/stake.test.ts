@@ -1,7 +1,7 @@
 import { IntentBuilder, CHAINS, PROJECTS, toBigInt, Asset, Stake, Account, amountToBigInt } from '../src';
 
 import { TENDERLY_CHAIN_ID, TIMEOUT, TOKENS } from './constants';
-import { initSigner, initTest } from './testUtils';
+import { initSigner, initTest, sleep } from './testUtils';
 
 describe('Stake', () => {
   let intentBuilder: IntentBuilder, account: Account;
@@ -16,10 +16,10 @@ describe('Stake', () => {
     'LidoETH',
     async () => {
       const from = new Asset({
-          address: TOKENS[CHAINS.Ethereum].ETH.address,
-          amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-          chainId: toBigInt(CHAINS.Ethereum),
-        }),
+        address: TOKENS[CHAINS.Ethereum].ETH.address,
+        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+        chainId: toBigInt(CHAINS.Ethereum),
+      }),
         to = new Stake({
           address: PROJECTS[CHAINS.Ethereum].Lido,
           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
@@ -34,7 +34,7 @@ describe('Stake', () => {
         TOKENS[CHAINS.Ethereum].STETH.address,
       );
 
-      await intentBuilder.execute(from, to, account, {
+      const result = await intentBuilder.execute(from, to, account, {
         sourceChainId: TENDERLY_CHAIN_ID.Ethereum,
       });
 
@@ -46,6 +46,12 @@ describe('Stake', () => {
 
       expect(finalDaiBalance).toBeLessThan(initialDaiBalance);
       expect(finalStEthBalance).toBeGreaterThan(initialStEthBalance);
+
+      await sleep(3000)
+
+      const receipt = await intentBuilder.getReceipt(TENDERLY_CHAIN_ID.Ethereum, result.userOpHash.solved_hash);
+
+      expect(receipt.result.reason).toBe("PROCESSING_STATUS_ON_CHAIN")
     },
     TIMEOUT,
   );
@@ -54,10 +60,10 @@ describe('Stake', () => {
     'Ankr',
     async () => {
       const from = new Asset({
-          address: TOKENS[CHAINS.Ethereum].ETH.address,
-          amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
-          chainId: toBigInt(CHAINS.Ethereum),
-        }),
+        address: TOKENS[CHAINS.Ethereum].ETH.address,
+        amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),
+        chainId: toBigInt(CHAINS.Ethereum),
+      }),
         to = new Stake({
           address: PROJECTS[CHAINS.Ethereum].Ankr,
           amount: amountToBigInt(0.1, TOKENS[CHAINS.Ethereum].ETH.decimal),

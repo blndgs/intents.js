@@ -1,6 +1,15 @@
 import { IntentBuilder, CHAINS, toBigInt, Asset, Account, floatToToken, weiToFloat, amountToBigInt } from '../src';
 import { TENDERLY_CHAIN_ID, TIMEOUT, Token, TOKENS } from './constants';
-import { getPrice, initSigner, initTest } from './testUtils';
+import { sleep, getPrice, initSigner, initTest } from './testUtils';
+import failOnConsole from 'jest-fail-on-console'
+
+failOnConsole()
+
+describe("float to token", () => {
+  it("converts", () => {
+    expect(floatToToken(1, 6)).toBe(BigInt(1000000))
+  })
+})
 
 /** Maximum allowed slippage for swaps (2%) */
 const DEFAULT_SLIPPAGE = 0.02;
@@ -47,12 +56,16 @@ describe('swap', () => {
       chainId: toBigInt(CHAINS.Ethereum),
     });
 
+    const sender = account.getSender(chainId)
+
     // Get expected amount and calculate minimum amount with slippage
     const expectedTargetAmount = await getPrice(
       CHAINS.Ethereum,
       sourceToken,
       targetToken,
-      floatToToken(bufferedAmount, sourceToken.decimal),
+      amountToBigInt(bufferedAmount, sourceToken.decimal),
+      sender,
+      Number(await account.getERC4337Nonce(chainId, sender)),
     );
     const minTargetAmount = (expectedTargetAmount * BigInt(Math.floor((1 - slippage) * 10000))) / BigInt(10000);
 
@@ -62,7 +75,7 @@ describe('swap', () => {
     console.log('sourceAmount', bufferedAmount);
     console.log('expectedTargetAmount', weiToFloat(expectedTargetAmount));
     console.log('minTargetAmount', weiToFloat(minTargetAmount));
-    console.log('sender', account.getSender(chainId));
+    console.log('sender', sender);
     console.log('source balance', await account.getBalance(chainId, sourceToken.address));
     console.log('targetToken balance', await account.getBalance(chainId, targetToken.address));
 
@@ -75,14 +88,22 @@ describe('swap', () => {
 
     // Execute swap
     try {
-      await intentBuilder.execute(from, to, account, {
+      const result = await intentBuilder.execute(from, to, account, {
         sourceChainId: chainId,
         recipient,
       });
+
+      await sleep(3000)
+
+      const receipt = await intentBuilder.getReceipt(TENDERLY_CHAIN_ID.Ethereum, result.userOpHash.solved_hash);
+
+      expect(receipt.result.reason).toBe("PROCESSING_STATUS_ON_CHAIN")
+
     } catch (error) {
       console.error(`Swap failed: ${error}`);
     }
   };
+
 
   /**
    * Checks balance and executes swap if conditions are met.
@@ -117,12 +138,16 @@ describe('swap', () => {
       return;
     }
 
+    const sender = account.getSender(chainId);
+
     // Get expected amount
     const expectedTargetAmount = await getPrice(
       CHAINS.Ethereum,
       sourceToken,
       targetToken,
-      floatToToken(bufferedAmount, sourceToken.decimal),
+      amountToBigInt(bufferedAmount, sourceToken.decimal),
+      sender,
+      Number(await account.getERC4337Nonce(chainId, sender)),
     );
 
     // Check if expected amount is zero or very close to zero
@@ -130,6 +155,7 @@ describe('swap', () => {
       console.log(
         `Skipping ${sourceToken.address} -> ${targetToken.address} due to zero or very small expected target amount`,
       );
+      console.log(expectedTargetAmount, MINIMUM_SWAP_AMOUNT)
       return;
     }
 
@@ -145,7 +171,6 @@ describe('swap', () => {
   beforeAll(async () => {
     const chainConfigs = await initTest();
     ({ account, intentBuilder } = await initSigner(chainConfigs));
-    await account.faucet(TENDERLY_CHAIN_ID.Ethereum, 1);
   }, TIMEOUT);
 
   it(
